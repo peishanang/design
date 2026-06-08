@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shift Creation — Admin Settings</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f4f5f7; color: #1a2332; font-size: 14px; display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar { width: 210px; background: #1a2332; min-height: 100vh; flex-shrink: 0; position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; overflow-y: auto; }
+  .sidebar-logo { padding: 18px 16px 14px; border-bottom: 1px solid #2a3548; }
+  .logo { font-size: 14px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
+  .logo-dot { width: 22px; height: 22px; background: #5e6ad2; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; font-weight: 700; }
+  .nav-section { padding: 14px 16px 4px; font-size: 10px; font-weight: 600; color: #4a5a6e; text-transform: uppercase; letter-spacing: 0.08em; }
+  .nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 16px; color: #7a8a9d; font-size: 12.5px; cursor: pointer; transition: all 0.1s; }
+  .nav-item:hover { background: #243049; color: #c0c8d4; }
+  .nav-item.active { background: #2a3a55; color: #fff; }
+  .nav-sub { padding-left: 32px; font-size: 12px; color: #5a6a7e; padding-top: 5px; padding-bottom: 5px; cursor: pointer; }
+  .nav-sub:hover { color: #8a9ab0; }
+  .nav-sub.active { color: #8a9ff0; }
+
+  /* Sidebar anchor nav */
+  .anchor-nav { padding: 10px 0 20px; }
+  .anchor-item { display: flex; align-items: center; gap: 7px; padding: 6px 16px; font-size: 12px; color: #5a6a7e; cursor: pointer; transition: all 0.12s; border-left: 2px solid transparent; margin-left: 0; }
+  .anchor-item:hover { color: #8a9ab0; }
+  .anchor-item.active { color: #8a9ff0; border-left-color: #5e6ad2; background: #1f2e44; }
+  .anchor-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; opacity: 0.6; }
+
+  /* Main */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+  /* Top bar */
+  .topbar { background: #fff; border-bottom: 1px solid #e5e8ed; padding: 0 24px; height: 50px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; position: sticky; top: 0; z-index: 10; }
+  .topbar-breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #8a99ad; }
+  .topbar-breadcrumb span { color: #1a2332; font-weight: 500; }
+  .topbar-breadcrumb .sep { color: #ccc; }
+  .topbar-actions { display: flex; align-items: center; gap: 8px; }
+  .btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
+  .btn-ghost { background: transparent; color: #5a6a7e; border: 1px solid #dde1e7; }
+  .btn-ghost:hover { background: #f4f5f7; }
+  .btn-primary { background: #5e6ad2; color: #fff; }
+  .btn-primary:hover { background: #4c58c0; }
+  .save-indicator { font-size: 12px; color: #3a8a3a; display: flex; align-items: center; gap: 5px; }
+
+  /* Content */
+  .content { flex: 1; overflow-y: auto; padding: 24px 28px 60px; }
+
+  /* Page header */
+  .page-header { margin-bottom: 20px; }
+  .page-header h1 { font-size: 19px; font-weight: 600; color: #1a2332; margin-bottom: 4px; }
+  .page-header p { color: #6b7a8d; font-size: 13px; line-height: 1.5; }
+
+  /* 2-col grid */
+  .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; align-items: start; }
+
+  /* Row label */
+  .row-label { display: flex; align-items: center; gap: 10px; margin: 16px 0 10px; }
+  .row-label span { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9aa5b4; white-space: nowrap; }
+  .row-label hr { flex: 1; border: none; border-top: 1px solid #e9ecf0; }
+
+  /* Section */
+  .section { margin-bottom: 10px; }
+  .section-anchor { display: block; position: relative; top: -70px; visibility: hidden; }
+
+  /* Card */
+  .card { background: #fff; border: 1px solid #e5e8ed; border-radius: 10px; overflow: hidden; }
+  .card-header { padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; border-bottom: 1px solid #f0f2f5; }
+  .card-header-left { display: flex; align-items: center; gap: 10px; }
+  .section-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .card-title { font-size: 14px; font-weight: 600; color: #1a2332; }
+  .card-subtitle { font-size: 12px; color: #8a99ad; margin-top: 1px; }
+  .collapse-icon { color: #bcc4cc; font-size: 13px; transition: transform 0.2s; flex-shrink: 0; }
+  .card.collapsed .collapse-icon { transform: rotate(-90deg); }
+  .card.collapsed .card-body { display: none; }
+  .card-body { padding: 18px; }
+
+  /* Section divider */
+  .section-label-row { display: flex; align-items: center; gap: 10px; margin: 24px 0 10px; }
+  .section-label-row h2 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #8a99ad; white-space: nowrap; }
+  .section-label-row hr { flex: 1; border: none; border-top: 1px solid #e9ecf0; }
+
+  /* Callout */
+  .callout { display: flex; gap: 9px; padding: 10px 13px; border-radius: 7px; font-size: 12px; line-height: 1.6; margin-bottom: 14px; }
+  .callout-info { background: #f0f4ff; border: 1px solid #c8ccf0; color: #3a4890; }
+  .callout-warn { background: #fff8ec; border: 1px solid #f5d07a; color: #8a5a0a; }
+  .callout-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+
+  /* Compliance checks */
+  .check-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f4f5f7; gap: 12px; }
+  .check-row:last-child { border-bottom: none; }
+  .check-name { flex: 1; font-size: 13px; font-weight: 500; color: #1a2332; }
+  .check-desc { font-size: 12px; color: #8a99ad; margin-top: 2px; }
+  .severity-group { display: flex; gap: 3px; flex-shrink: 0; }
+  .severity-btn { padding: 5px 11px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1.5px solid #e5e8ed; color: #8a99ad; background: #fff; transition: all 0.12s; }
+  .severity-btn:hover { border-color: #bcc4cc; color: #5a6a7e; }
+  .severity-btn.active-off { background: #f4f5f7; border-color: #d0d6df; color: #4a5568; }
+  .severity-btn.active-warn { background: #fff8ec; border-color: #f5a623; color: #b8730a; }
+  .severity-btn.active-block { background: #fff1f1; border-color: #e05252; color: #c0392b; }
+  .add-link { display: inline-flex; align-items: center; gap: 5px; color: #5e6ad2; font-size: 12.5px; font-weight: 500; cursor: pointer; margin-top: 12px; }
+  .add-link:hover { color: #4c58c0; }
+
+  /* Field table */
+  .field-table { width: 100%; border-collapse: collapse; }
+  .field-table th { text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #8a99ad; padding: 0 10px 9px; }
+  .field-table th:first-child { padding-left: 0; }
+  .field-table td { padding: 8px 10px; border-top: 1px solid #f4f5f7; vertical-align: middle; }
+  .field-table td:first-child { padding-left: 0; }
+  .field-table tr:first-child td { border-top: none; }
+  .field-name { font-size: 13px; font-weight: 500; color: #1a2332; }
+  .field-note { font-size: 11px; color: #b0b9c4; margin-top: 1px; }
+  .radio-group { display: flex; gap: 3px; }
+  .radio-btn { padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1.5px solid #e5e8ed; color: #8a99ad; background: #fff; transition: all 0.12s; }
+  .radio-btn:hover { border-color: #bcc4cc; color: #5a6a7e; }
+  .radio-btn.active { background: #f0f1ff; border-color: #5e6ad2; color: #5e6ad2; }
+  .radio-btn.disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+  .badge-note { font-size: 10px; background: #f0f2f5; color: #8a99ad; border-radius: 4px; padding: 2px 6px; margin-left: 5px; font-weight: 500; }
+
+  /* Defaults */
+  .defaults-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label { font-size: 11px; font-weight: 600; color: #6a7a8e; text-transform: uppercase; letter-spacing: 0.04em; }
+  .form-group select, .form-group input[type="time"], .form-group input[type="number"], .form-group input[type="text"] {
+    padding: 7px 10px; border: 1.5px solid #dde1e7; border-radius: 7px; font-size: 13px; color: #1a2332; background: #fff; width: 100%; appearance: none;
+  }
+  .form-group select:focus, .form-group input:focus { outline: none; border-color: #5e6ad2; }
+
+  /* Autofill rules */
+  .rule-row { display: flex; align-items: flex-start; padding: 11px 0; border-bottom: 1px solid #f4f5f7; gap: 12px; }
+  .rule-row:last-child { border-bottom: none; }
+  .rule-icon { width: 26px; height: 26px; border-radius: 6px; background: #f4f5f7; display: flex; align-items: center; justify-content: center; font-size: 12px; margin-top: 1px; flex-shrink: 0; }
+  .rule-body { flex: 1; }
+  .rule-name { font-size: 13px; font-weight: 500; color: #1a2332; }
+  .rule-desc { font-size: 12px; color: #8a99ad; margin-top: 2px; line-height: 1.5; }
+
+  /* Toggle */
+  .toggle { position: relative; display: inline-block; width: 36px; height: 20px; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; inset: 0; background: #dde1e7; border-radius: 20px; cursor: pointer; transition: 0.2s; }
+  .toggle-slider:before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.2s; }
+  input:checked + .toggle-slider { background: #5e6ad2; }
+  input:checked + .toggle-slider:before { transform: translateX(16px); }
+
+  /* Toggle row */
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f4f5f7; gap: 12px; }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-label { font-size: 13px; font-weight: 500; color: #1a2332; }
+  .toggle-sublabel { font-size: 12px; color: #8a99ad; margin-top: 2px; }
+
+  /* Publish rules */
+  .publish-rule-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f4f5f7; gap: 12px; }
+  .publish-rule-row:last-child { border-bottom: none; }
+  .publish-rule-name { font-size: 13px; font-weight: 500; color: #1a2332; }
+  .publish-rule-note { font-size: 12px; color: #8a99ad; margin-top: 2px; }
+  .sev-small { display: flex; gap: 3px; flex-shrink: 0; }
+  .sev-btn { padding: 4px 10px; border-radius: 5px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1.5px solid #e5e8ed; color: #8a99ad; background: #fff; transition: all 0.12s; }
+  .sev-btn:hover { border-color: #bcc4cc; }
+  .sev-btn.active-warn { background: #fff8ec; border-color: #f5a623; color: #b8730a; }
+  .sev-btn.active-block { background: #fff1f1; border-color: #e05252; color: #c0392b; }
+
+  /* Approval */
+  .approval-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .approval-option { display: flex; align-items: flex-start; gap: 11px; padding: 12px 14px; border: 1.5px solid #e5e8ed; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+  .approval-option:hover { border-color: #bcc4cc; }
+  .approval-option.selected { border-color: #5e6ad2; background: #f8f8ff; }
+  .approval-option input[type="radio"] { margin-top: 2px; accent-color: #5e6ad2; flex-shrink: 0; }
+  .approval-title { font-size: 13px; font-weight: 600; color: #1a2332; }
+  .approval-desc { font-size: 12px; color: #8a99ad; margin-top: 2px; line-height: 1.5; }
+  .approval-sub { background: #f8f9fb; border: 1px solid #e5e8ed; border-radius: 8px; padding: 14px 16px; }
+  .approval-sub label { font-size: 11px; font-weight: 600; color: #6a7a8e; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 7px; }
+  .threshold-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .threshold-row input { width: 64px; padding: 6px 9px; border: 1.5px solid #dde1e7; border-radius: 6px; font-size: 13px; }
+  .threshold-row span { font-size: 13px; color: #5a6a7e; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+  .chip { display: flex; align-items: center; gap: 5px; background: #eef0ff; border: 1px solid #c8ccf0; color: #4a52b8; border-radius: 20px; padding: 3px 10px 3px 4px; font-size: 12px; font-weight: 500; }
+  .chip-avatar { width: 18px; height: 18px; border-radius: 50%; background: #5e6ad2; color: #fff; font-size: 8px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .chip-add { background: #f4f5f7; border-color: #dde1e7; color: #7a8899; cursor: pointer; }
+  .chip-add:hover { background: #e9ecf0; }
+
+  /* Annotation */
+  .annotation { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; background: #e8eaf6; color: #5e6ad2; font-size: 9px; font-weight: 700; cursor: help; margin-left: 4px; position: relative; vertical-align: middle; flex-shrink: 0; }
+  .annotation:hover .tooltip { display: block; }
+  .tooltip { display: none; position: absolute; left: 20px; top: -4px; background: #1a2332; color: #fff; font-size: 12px; padding: 7px 10px; border-radius: 7px; z-index: 100; line-height: 1.5; width: 230px; font-weight: 400; pointer-events: none; }
+
+  /* Warn preview */
+  .warn-preview { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid #f0f2f5; }
+  .warn-box { border-radius: 7px; padding: 9px 12px; font-size: 12px; display: flex; gap: 8px; align-items: flex-start; }
+  .warn-box-warn { border: 1.5px solid #f5a623; background: #fffaf2; color: #8a5a0a; }
+  .warn-box-block { border: 1.5px solid #e05252; background: #fff5f5; color: #c0392b; }
+
+  /* Two-col layout for compact sections */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+
+  /* ── Card-level read-only ── */
+  .card-readonly .card-body { pointer-events: none; user-select: none; }
+  .card-readonly .card-header, .card-readonly .card-header-right { pointer-events: auto; }
+  /* Editing ring */
+  .card-editing { border-color: #5e6ad2 !important; box-shadow: 0 0 0 3px rgba(94,106,210,.08) !important; }
+
+  /* ── Read-only display elements ── */
+  .ro-list { display: flex; flex-direction: column; }
+  .ro-row  { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #f4f5f7; gap: 12px; }
+  .ro-row:last-child { border-bottom: none; }
+  .ro-name { font-size: 13px; color: #3d4a5c; flex: 1; line-height: 1.4; }
+  .ro-icon { font-size: 13px; margin-right: 6px; }
+  .ro-badge { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 5px; flex-shrink: 0; white-space: nowrap; }
+  .ro-block { background: #fff1f1; color: #c0392b; }
+  .ro-warn  { background: #fff8ec; color: #b8730a; }
+  .ro-off   { background: #f4f5f7; color: #8a99ad; }
+  .ro-on    { background: #f0fff4; color: #2e7d4f; }
+  .ro-req   { background: #f0f1ff; color: #5e6ad2; }
+  .ro-opt   { background: #f4f5f7; color: #8a99ad; }
+  .ro-hid   { background: #f4f5f7; color: #8a99ad; }
+  .ro-kv    { display: grid; grid-template-columns: 1fr 1fr; gap: 13px 16px; }
+  .ro-kv-item { display: flex; flex-direction: column; gap: 3px; }
+  .ro-kv-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #9aa5b4; }
+  .ro-kv-value { font-size: 13px; color: #1a2332; font-weight: 500; }
+  .ro-section-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin: 12px 0 6px; }
+
+  /* ── Card edit controls ── */
+  .card-header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .card-edit-btn   { display: inline-flex; align-items: center; gap: 4px; padding: 4px 11px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid #dde1e7; background: #fff; color: #5a6a7e; transition: all 0.13s; white-space: nowrap; }
+  .card-edit-btn:hover { background: #f0f1ff; border-color: #5e6ad2; color: #5e6ad2; }
+  .card-save-btn   { display: none; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: #5e6ad2; color: #fff; transition: background 0.13s; }
+  .card-save-btn:hover { background: #4c58c0; }
+  .card-cancel-btn { display: none; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1.5px solid #dde1e7; background: #fff; color: #8a99ad; transition: all 0.13s; }
+  .card-cancel-btn:hover { background: #f4f5f7; }
+
+  /* ── Search bar ── */
+  .search-wrap { position: relative; margin-bottom: 14px; }
+  .search-input { width: 100%; padding: 9px 14px 9px 36px; border: 1.5px solid #dde1e7; border-radius: 8px; font-size: 13px; color: #1a2332; background: #fff; transition: border-color 0.15s; outline: none; }
+  .search-input:focus { border-color: #5e6ad2; box-shadow: 0 0 0 3px rgba(94,106,210,.1); }
+  .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #9aa5b4; pointer-events: none; }
+  .search-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #9aa5b4; cursor: pointer; font-size: 15px; display: none; line-height: 1; }
+  .search-clear:hover { color: #5a6a7e; }
+  .search-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1.5px solid #dde1e7; border-radius: 9px; box-shadow: 0 8px 24px rgba(0,0,0,.1); z-index: 50; max-height: 280px; overflow-y: auto; display: none; }
+  .search-result { display: flex; align-items: center; gap: 10px; padding: 9px 14px; cursor: pointer; border-bottom: 1px solid #f4f5f7; transition: background 0.1s; }
+  .search-result:last-child { border-bottom: none; }
+  .search-result:hover, .search-result.focused { background: #f5f6ff; }
+  .search-result-icon { font-size: 14px; flex-shrink: 0; }
+  .search-result-text { flex: 1; font-size: 13px; color: #1a2332; }
+  .search-result-text mark { background: #ffeaa7; color: inherit; border-radius: 2px; padding: 0 1px; }
+  .search-result-section { font-size: 11px; color: #9aa5b4; flex-shrink: 0; }
+  .search-no-results { padding: 14px; font-size: 13px; color: #9aa5b4; text-align: center; }
+
+  /* ── Card flash (old, kept for fallback) ── */
+  @keyframes flashCard { 0%,100%{background:#fff} 25%,75%{background:#eef0ff} }
+  .search-highlight { animation: flashCard 1.2s ease; }
+
+  /* ── Row-level highlight ── */
+  @keyframes rowPop {
+    0%   { background: transparent; }
+    6%   { background: #fef9c3; }
+    65%  { background: #fef9c3; }
+    100% { background: transparent; }
+  }
+  .row-highlight { animation: rowPop 4s ease forwards; border-radius: 6px; }
+
+  /* ── Summary panel ── */
+  .summary-card { background: #fff; border: 1px solid #e5e8ed; border-radius: 10px; margin-bottom: 14px; overflow: hidden; }
+  .summary-header { display: flex; align-items: center; justify-content: space-between; padding: 11px 16px; cursor: pointer; user-select: none; border-bottom: 1px solid #f0f2f5; }
+  .summary-header-left { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #1a2332; }
+  .summary-body { padding: 4px 0; }
+  .summary-row { display: flex; align-items: baseline; gap: 0; padding: 7px 16px; border-bottom: 1px solid #f7f8fa; }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-section { display: flex; align-items: center; gap: 6px; width: 148px; flex-shrink: 0; }
+  .summary-section-icon { font-size: 13px; }
+  .summary-section-name { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa5b4; }
+  .summary-text { font-size: 12.5px; color: #3d4a5c; line-height: 1.5; flex: 1; }
+  .s-badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; border-radius: 4px; padding: 1px 6px; margin: 0 2px; white-space: nowrap; }
+  .s-block { background: #fff1f1; color: #c0392b; }
+  .s-warn  { background: #fff8ec; color: #b8730a; }
+  .s-on    { background: #f0fff4; color: #2e7d4f; }
+  .s-off   { background: #f4f5f7; color: #7a8899; }
+  .s-req   { background: #f0f1ff; color: #5e6ad2; }
+  .s-hid   { background: #f4f5f7; color: #7a8899; }
+  .summary-collapse { color: #bcc4cc; font-size: 12px; transition: transform 0.2s; }
+  .summary-card.collapsed .summary-collapse { transform: rotate(-90deg); }
+  .summary-card.collapsed .summary-body { display: none; }
+  .summary-edit { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: #5e6ad2; cursor: pointer; white-space: nowrap; padding: 2px 8px; border-radius: 5px; border: 1px solid #d4d8f7; background: #f5f6ff; flex-shrink: 0; transition: all 0.12s; user-select: none; }
+  .summary-edit:hover { background: #eaecff; border-color: #b0b6f0; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo"><div class="logo-dot">S</div> ShiftCare</div>
+  </div>
+  <div style="padding: 10px 0 6px;">
+    <div class="nav-section">Workspace</div>
+    <div class="nav-item">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Scheduler
+    </div>
+    <div class="nav-item">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Clients
+    </div>
+    <div class="nav-item">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Carers
+    </div>
+    <div class="nav-section">Admin</div>
+    <div class="nav-item active">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+      Settings
+    </div>
+  </div>
+
+  <!-- Anchor nav inside settings -->
+  <div class="anchor-nav">
+    <div class="anchor-item active" onclick="scrollTo('row1')"><div class="anchor-dot"></div>Compliance &amp; Fields</div>
+    <div class="anchor-item" onclick="scrollTo('row2')"><div class="anchor-dot"></div>Defaults &amp; Autofill</div>
+    <div class="anchor-item" onclick="scrollTo('row3')"><div class="anchor-dot"></div>Publish &amp; Approval</div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-breadcrumb">
+      Settings <span class="sep">›</span> <span>Shift Creation</span>
+    </div>
+    <div class="topbar-actions">
+      <span class="save-indicator" id="save-indicator" style="display:none">✓ Saved</span>
+      <span id="topbar-editing-hint" style="display:none; font-size:12px; color:#8a99ad;">Click a section's Edit to make changes</span>
+      <button class="btn btn-ghost" id="topbar-discard" style="display:none" onclick="if(confirm('Discard changes?'))location.reload()">Discard all</button>
+    </div>
+  </div>
+
+  <div class="content" id="main-content">
+
+    <div class="page-header">
+      <div>
+        <h1>Shift Creation Settings</h1>
+        <p>Customise how coordinators create shifts — compliance checks, field requirements, smart defaults, and publish rules.</p>
+      </div>
+    </div>
+
+    <!-- ── Search bar ── -->
+    <div class="search-wrap" id="search-wrap">
+      <svg class="search-icon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" id="search-input" type="text" placeholder="Search settings… (e.g. shift type, police check, approval)">
+      <span class="search-clear" id="search-clear" onclick="clearSearch()">✕</span>
+      <div class="search-dropdown" id="search-dropdown"></div>
+    </div>
+
+    <!-- ── Summary panel ── -->
+    <div class="summary-card" id="summary-card">
+      <div class="summary-header" onclick="this.closest('.summary-card').classList.toggle('collapsed')">
+        <div class="summary-header-left">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Current Configuration
+        </div>
+        <span class="summary-collapse">▾</span>
+      </div>
+      <div class="summary-body" id="summary-body">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- ══ ROW 1: COMPLIANCE + FIELDS ══ -->
+    <span class="section-anchor" id="row1"></span>
+    <div class="row-label"><span>Compliance &amp; Fields</span><hr></div>
+    <div class="grid-2col" id="row1-grid">
+
+      <!-- Compliance card -->
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="card-header-left">
+            <div class="section-icon" style="background:#fff1f1">🛡️</div>
+            <div>
+              <div class="card-title">Document &amp; Certification Checks</div>
+              <div class="card-subtitle">Block or warn when a carer is missing required docs</div>
+            </div>
+          </div>
+          <span class="collapse-icon">▾</span>
+        </div>
+        <div class="card-body">
+          <div class="callout callout-warn" style="margin-bottom:12px">
+            <span class="callout-icon">🔗</span>
+            <span>Broad qualification matching is in <strong>Scheduler → Carer qualification matching</strong>. These checks are document-specific.</span>
+          </div>
+          <div style="font-size:11px; font-weight:600; color:#8a99ad; margin-bottom:6px;">Off = skip · Warn = dismissible alert · Block = prevents publish</div>
+
+          <div class="check-row" id="sr-police-check">
+            <div class="check-name" style="flex:1">Police Check (NDIS Worker Screening)</div>
+            <div class="severity-group">
+              <button class="severity-btn active-off" onclick="setSev(this,'off')">Off</button>
+              <button class="severity-btn" onclick="setSev(this,'warn')">Warn</button>
+              <button class="severity-btn active-block" onclick="setSev(this,'block')">Block</button>
+            </div>
+          </div>
+          <div class="check-row" id="sr-wwc">
+            <div class="check-name" style="flex:1">Working with Children Check</div>
+            <div class="severity-group">
+              <button class="severity-btn active-off" onclick="setSev(this,'off')">Off</button>
+              <button class="severity-btn" onclick="setSev(this,'warn')">Warn</button>
+              <button class="severity-btn" onclick="setSev(this,'block')">Block</button>
+            </div>
+          </div>
+          <div class="check-row" id="sr-first-aid">
+            <div class="check-name" style="flex:1">First Aid / CPR Certification</div>
+            <div class="severity-group">
+              <button class="severity-btn" onclick="setSev(this,'off')">Off</button>
+              <button class="severity-btn active-warn" onclick="setSev(this,'warn')">Warn</button>
+              <button class="severity-btn" onclick="setSev(this,'block')">Block</button>
+            </div>
+          </div>
+          <div class="check-row" id="sr-manual-handling">
+            <div class="check-name" style="flex:1">Manual Handling Training</div>
+            <div class="severity-group">
+              <button class="severity-btn active-off" onclick="setSev(this,'off')">Off</button>
+              <button class="severity-btn" onclick="setSev(this,'warn')">Warn</button>
+              <button class="severity-btn" onclick="setSev(this,'block')">Block</button>
+            </div>
+          </div>
+          <div class="check-row" id="sr-induction">
+            <div class="check-name" style="flex:1">Carer Induction Completed</div>
+            <div class="severity-group">
+              <button class="severity-btn" onclick="setSev(this,'off')">Off</button>
+              <button class="severity-btn active-warn" onclick="setSev(this,'warn')">Warn</button>
+              <button class="severity-btn" onclick="setSev(this,'block')">Block</button>
+            </div>
+          </div>
+          <div class="check-row" id="sr-covid">
+            <div class="check-name" style="flex:1">COVID-19 Vaccination Record</div>
+            <div class="severity-group">
+              <button class="severity-btn active-off" onclick="setSev(this,'off')">Off</button>
+              <button class="severity-btn" onclick="setSev(this,'warn')">Warn</button>
+              <button class="severity-btn" onclick="setSev(this,'block')">Block</button>
+            </div>
+          </div>
+
+          <div class="add-link" onclick="addCustomCheck()">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add custom document check
+          </div>
+          <div class="warn-preview">
+            <div class="warn-box warn-box-warn">⚠️ <div><strong>Jordan M.'s First Aid cert</strong> expires in 12 days. You can still publish.</div></div>
+            <div class="warn-box warn-box-block">✗ <div><strong>Sam K. is missing a Police Check.</strong> Resolve in their carer profile before publishing.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Field Config card -->
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="card-header-left">
+            <div class="section-icon" style="background:#f0f4ff">🗂️</div>
+            <div>
+              <div class="card-title">Form Field Visibility</div>
+              <div class="card-subtitle">Required = enforced on save · Hidden = removed from form</div>
+            </div>
+          </div>
+          <span class="collapse-icon">▾</span>
+        </div>
+        <div class="card-body">
+          <table class="field-table">
+            <thead>
+              <tr><th>Field</th><th>Visibility</th></tr>
+            </thead>
+            <tbody>
+              <tr id="sr-field-location"><td><div class="field-name">Account Location</div></td><td><div class="radio-group"><button class="radio-btn" onclick="setField(this)">Required</button><button class="radio-btn active" onclick="setField(this)">Optional</button><button class="radio-btn" onclick="setField(this)">Hidden</button></div></td></tr>
+              <tr id="sr-field-facility"><td><div class="field-name">Facility</div><div class="field-note">Hide for non-facility providers</div></td><td><div class="radio-group"><button class="radio-btn" onclick="setField(this)">Required</button><button class="radio-btn" onclick="setField(this)">Optional</button><button class="radio-btn active" onclick="setField(this)">Hidden</button></div></td></tr>
+              <tr id="sr-field-shift-type"><td><div class="field-name">Shift Type</div><div class="field-note">Cannot hide — drives billing</div></td><td><div class="radio-group"><button class="radio-btn active" onclick="setField(this)">Required</button><button class="radio-btn" onclick="setField(this)">Optional</button><button class="radio-btn disabled">Hidden</button></div></td></tr>
+              <tr id="sr-field-allowance"><td><div class="field-name">Allowance</div></td><td><div class="radio-group"><button class="radio-btn" onclick="setField(this)">Required</button><button class="radio-btn active" onclick="setField(this)">Optional</button><button class="radio-btn" onclick="setField(this)">Hidden</button></div></td></tr>
+              <tr id="sr-field-address"><td><div class="field-name">Address</div></td><td><div class="radio-group"><button class="radio-btn active" onclick="setField(this)">Required</button><button class="radio-btn" onclick="setField(this)">Optional</button><button class="radio-btn" onclick="setField(this)">Hidden</button></div></td></tr>
+              <tr id="sr-field-instructions"><td><div class="field-name">Instructions <span class="badge-note">Adv</span></div><div class="field-note">Required → Simple mode</div></td><td><div class="radio-group"><button class="radio-btn" onclick="setField(this)">Required</button><button class="radio-btn active" onclick="setField(this)">Optional</button><button class="radio-btn" onclick="setField(this)">Hidden</button></div></td></tr>
+              <tr id="sr-field-tasks"><td><div class="field-name">Tasks <span class="badge-note">Adv</span></div><div class="field-note">Required → Simple mode</div></td><td><div class="radio-group"><button class="radio-btn active" onclick="setField(this)">Required</button><button class="radio-btn" onclick="setField(this)">Optional</button><button class="radio-btn" onclick="setField(this)">Hidden</button></div></td></tr>
+              <tr id="sr-field-forms"><td><div class="field-name">Shift Related Forms <span class="badge-note">Adv</span></div><div class="field-note">Required → Simple mode</div></td><td><div class="radio-group"><button class="radio-btn" onclick="setField(this)">Required</button><button class="radio-btn active" onclick="setField(this)">Optional</button><button class="radio-btn" onclick="setField(this)">Hidden</button></div></td></tr>
+              <tr id="sr-field-pay-group"><td><div class="field-name">Pay Group</div></td><td><div class="radio-group"><button class="radio-btn" onclick="setField(this)">Required</button><button class="radio-btn active" onclick="setField(this)">Optional</button><button class="radio-btn" onclick="setField(this)">Hidden</button></div></td></tr>
+              <tr id="sr-field-signature"><td><div class="field-name">Require Client Signature</div></td><td><div class="radio-group"><button class="radio-btn" onclick="setField(this)">Required</button><button class="radio-btn" onclick="setField(this)">Optional</button><button class="radio-btn active" onclick="setField(this)">Hidden</button></div></td></tr>
+              <tr id="sr-field-bonus"><td><div class="field-name">Shift Bonus</div></td><td><div class="radio-group"><button class="radio-btn" onclick="setField(this)">Required</button><button class="radio-btn" onclick="setField(this)">Optional</button><button class="radio-btn active" onclick="setField(this)">Hidden</button></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /row1 -->
+
+    <!-- ══ ROW 2: DEFAULTS + AUTOFILL ══ -->
+    <span class="section-anchor" id="row2"></span>
+    <div class="row-label"><span>Defaults &amp; Autofill</span><hr></div>
+    <div class="grid-2col" id="row2-grid">
+
+      <!-- Defaults card -->
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="card-header-left">
+            <div class="section-icon" style="background:#f0fff4">⚙️</div>
+            <div>
+              <div class="card-title">Default Field Values</div>
+              <div class="card-subtitle">Pre-populate these values on every new shift</div>
+            </div>
+          </div>
+          <span class="collapse-icon">▾</span>
+        </div>
+        <div class="card-body">
+          <div class="defaults-grid" style="margin-bottom:14px">
+            <div class="form-group" id="sr-default-shift-type">
+              <label>Default shift type</label>
+              <select><option>Personal Care</option><option>Community Access</option><option>Domestic Assistance</option></select>
+            </div>
+            <div class="form-group" id="sr-default-location">
+              <label>Default account location</label>
+              <select><option>Default</option><option>Sydney</option><option>Melbourne</option></select>
+            </div>
+            <div class="form-group" id="sr-default-start">
+              <label>Default start time</label>
+              <input type="time" value="09:00">
+            </div>
+            <div class="form-group" id="sr-default-end">
+              <label>Default end time</label>
+              <input type="time" value="17:00">
+            </div>
+            <div class="form-group" id="sr-default-pay-group">
+              <label>Default pay group</label>
+              <select><option>SCHADS Award</option><option>Aged Care Award</option><option>None</option></select>
+            </div>
+            <div class="form-group" id="sr-default-repeat">
+              <label>Default repeat pattern</label>
+              <select><option>None (one-off)</option><option>Weekly</option><option>Fortnightly</option></select>
+            </div>
+          </div>
+          <div class="toggle-row" id="sr-default-notify">
+            <div><div class="toggle-label">Notify carer by default</div><div class="toggle-sublabel">Send notification when shift is published</div></div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row" id="sr-default-signature">
+            <div><div class="toggle-label">Require client signature by default</div><div class="toggle-sublabel">Pre-enable on every new shift</div></div>
+            <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Autofill card -->
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="card-header-left">
+            <div class="section-icon" style="background:#f8f0ff">✨</div>
+            <div>
+              <div class="card-title">Context-Aware Autofill</div>
+              <div class="card-subtitle">Trigger-based rules that fill fields automatically</div>
+            </div>
+          </div>
+          <span class="collapse-icon">▾</span>
+        </div>
+        <div class="card-body">
+          <div class="rule-row" id="sr-autofill-client">
+            <div class="rule-icon">👤</div>
+            <div class="rule-body">
+              <div class="rule-name">Client → price book, fund, address, forms</div>
+              <div class="rule-desc">Auto-selects client's linked fields on selection. Builds on "Display only pricebooks assigned to client".</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="rule-row" id="sr-autofill-calendar">
+            <div class="rule-icon">🕐</div>
+            <div class="rule-body">
+              <div class="rule-name">Calendar slot click → date &amp; time</div>
+              <div class="rule-desc">Extends Facilities view behaviour to Client and Staff views</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="rule-row" id="sr-autofill-allowance">
+            <div class="rule-icon">💰</div>
+            <div class="rule-body">
+              <div class="rule-name">Shift type + carer → allowance &amp; pay group</div>
+              <div class="rule-desc">Derived from award/pay item rules when both are known</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="rule-row" id="sr-autofill-recurrence">
+            <div class="rule-icon">🔄</div>
+            <div class="rule-body">
+              <div class="rule-name">Returning client → suggest recurrence</div>
+              <div class="rule-desc">Pre-fill repeat toggle from the client's existing pattern</div>
+            </div>
+            <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="rule-row" id="sr-autofill-smartmatch">
+            <div class="rule-icon">🤝</div>
+            <div class="rule-body">
+              <div class="rule-name">Auto-trigger Smart Match <span class="annotation">?<span class="tooltip">Fires 2 seconds after client + date + time are all filled. Turn off if coordinators prefer manual carer selection.</span></span></div>
+              <div class="rule-desc">Suggest carers automatically — no button click needed</div>
+            </div>
+            <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /row2 -->
+
+    <!-- ══ ROW 3: PUBLISH RULES + APPROVAL ══ -->
+    <span class="section-anchor" id="row3"></span>
+    <div class="row-label"><span>Publish &amp; Approval</span><hr></div>
+    <div class="grid-2col" id="row3-grid">
+
+      <!-- Publish Rules card -->
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="card-header-left">
+            <div class="section-icon" style="background:#fff1f0">🚦</div>
+            <div>
+              <div class="card-title">Blockers &amp; Warnings</div>
+              <div class="card-subtitle">Blockers cannot be overridden. Warnings can be dismissed.</div>
+            </div>
+          </div>
+          <span class="collapse-icon">▾</span>
+        </div>
+        <div class="card-body">
+          <div style="font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#c0392b; margin-bottom:7px;">Blockers — cannot override</div>
+          <div class="publish-rule-row" id="sr-pub-funding">
+            <div class="publish-rule-name">Client must have active funding</div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="publish-rule-row" id="sr-pub-pricebook">
+            <div class="publish-rule-name">Client must have a price book assigned</div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="publish-rule-row" id="sr-pub-carer">
+            <div class="publish-rule-name">Carer must be assigned (no vacant publish)</div>
+            <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="publish-rule-row" id="sr-pub-fund-balance">
+            <div class="publish-rule-name">Fund balance must cover estimated shift cost</div>
+            <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="publish-rule-row" id="sr-pub-task" style="border-bottom:none">
+            <div class="publish-rule-name">Shift must have at least one task</div>
+            <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+          </div>
+
+          <div style="font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#b8730a; margin:14px 0 7px;">Warnings — coordinator can dismiss</div>
+          <div class="publish-rule-row" id="sr-pub-hour-limit">
+            <div class="publish-rule-name">Carer will exceed weekly hour limit</div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="publish-rule-row" id="sr-pub-no-instructions">
+            <div class="publish-rule-name">No instructions entered</div>
+            <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="publish-rule-row" id="sr-pub-shift-type-mismatch" style="border-bottom:none">
+            <div class="publish-rule-name">Shift type doesn't match client's primary service</div>
+            <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; margin-top:12px; padding-top:10px; border-top:1px solid #f4f5f7; font-size:12px; color:#9aa5b4;">
+            <span>🔗</span><span>Overlapping shifts → <em>Scheduler settings</em></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Approval Flow card -->
+      <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <div class="card-header-left">
+            <div class="section-icon" style="background:#f0f4ff">✅</div>
+            <div>
+              <div class="card-title">Manager Sign-off</div>
+              <div class="card-subtitle">For coordinator-created shifts. Job Board approval is in Scheduler settings.</div>
+            </div>
+          </div>
+          <span class="collapse-icon">▾</span>
+        </div>
+        <div class="card-body">
+          <div class="approval-options">
+            <div class="approval-option" id="sr-approval-none" onclick="selectApproval(this,'none')">
+              <input type="radio" name="approval" value="none">
+              <div><div class="approval-title">No approval required</div><div class="approval-desc">Shifts publish immediately. Current behaviour.</div></div>
+            </div>
+            <div class="approval-option selected" id="sr-approval-threshold" onclick="selectApproval(this,'threshold')">
+              <input type="radio" name="approval" value="threshold" checked>
+              <div><div class="approval-title">Require approval above a threshold</div><div class="approval-desc">Only shifts over a set hour or cost limit enter the queue.</div></div>
+            </div>
+            <div class="approval-option" id="sr-approval-all" onclick="selectApproval(this,'all')">
+              <input type="radio" name="approval" value="all">
+              <div><div class="approval-title">Require approval for all shifts</div><div class="approval-desc">Every shift enters Pending Approval before carer visibility.</div></div>
+            </div>
+          </div>
+
+          <div class="approval-sub" id="approval-sub">
+            <label>Threshold — approve shifts exceeding:</label>
+            <div class="threshold-row" id="sr-approval-approvers">
+              <input type="number" value="8" min="1"> <span>hours</span>
+              <span style="color:#ccc">or</span>
+              <span style="color:#8a99ad">$</span><input type="number" value="500" min="0"> <span>cost</span>
+            </div>
+            <div style="margin-top:12px">
+              <label>Approvers <span class="annotation">?<span class="tooltip">Approvers get an in-app notification + email. Anyone with the Manager role can approve if no specific users are added.</span></span></label>
+              <div class="chips">
+                <div class="chip"><div class="chip-avatar">AM</div> All Managers</div>
+                <div class="chip chip-add" onclick="addApprover()">+ Add approver</div>
+              </div>
+            </div>
+            <div style="margin-top:12px; padding-top:10px; border-top:1px solid #e9ecf0;">
+              <div class="toggle-row" id="sr-approval-series" style="padding:0">
+                <div><div class="toggle-label" style="font-size:12px">Approve once per recurring series</div><div class="toggle-sublabel">Not per individual occurrence</div></div>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /row3 -->
+
+    <div style="height:40px"></div>
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+  function toggleCard(hdr) {
+    hdr.closest('.card').classList.toggle('collapsed');
+  }
+  function setSev(btn, level) {
+    const g = btn.closest('.severity-group');
+    g.querySelectorAll('.severity-btn').forEach(b => b.classList.remove('active-off','active-warn','active-block'));
+    if(level==='off') btn.classList.add('active-off');
+    if(level==='warn') btn.classList.add('active-warn');
+    if(level==='block') btn.classList.add('active-block');
+  }
+  function setSevSmall(btn, level) {
+    const g = btn.closest('.sev-small');
+    g.querySelectorAll('.sev-btn').forEach(b => b.classList.remove('active-warn','active-block'));
+    if(level==='warn') btn.classList.add('active-warn');
+    if(level==='block') btn.classList.add('active-block');
+  }
+  function setField(btn) {
+    const g = btn.closest('.radio-group');
+    g.querySelectorAll('.radio-btn:not(.disabled)').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  function selectApproval(el, val) {
+    document.querySelectorAll('.approval-option').forEach(o => { o.classList.remove('selected'); o.querySelector('input').checked = false; });
+    el.classList.add('selected'); el.querySelector('input').checked = true;
+    document.getElementById('approval-sub').style.display = val === 'threshold' ? '' : 'none';
+  }
+  function addCustomCheck() {
+    const list = document.querySelector('#row1 .card-body .check-row:last-of-type').parentNode;
+    const row = document.createElement('div'); row.className = 'check-row';
+    row.innerHTML = `<div style="flex:1"><input type="text" placeholder="Custom check name…" style="border:1.5px solid #5e6ad2;border-radius:6px;padding:6px 10px;font-size:13px;width:100%"></div><div class="severity-group"><button class="severity-btn active-off" onclick="setSev(this,'off')">Off</button><button class="severity-btn" onclick="setSev(this,'warn')">Warn</button><button class="severity-btn" onclick="setSev(this,'block')">Block</button></div>`;
+    list.insertBefore(row, list.querySelector('.add-link'));
+    row.querySelector('input').focus();
+  }
+  function addApprover() {
+    const chips = document.querySelector('.chips');
+    const chip = document.createElement('div'); chip.className = 'chip';
+    chip.innerHTML = `<div class="chip-avatar">ST</div> Sarah T. (Manager)`;
+    chips.insertBefore(chip, chips.lastElementChild);
+  }
+  function saveAll() { /* handled per-row now */ }
+  function scrollTo(id) {
+    document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelectorAll('.anchor-item').forEach(a => a.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+  }
+
+  // ── Search index ──────────────────────────────────────
+  const SEARCH_INDEX = [
+    // Compliance
+    { text: 'Police Check (NDIS Worker Screening)', section: 'Compliance', icon: '🛡️', elementId: 'sr-police-check' },
+    { text: 'Working with Children Check', section: 'Compliance', icon: '🛡️', elementId: 'sr-wwc' },
+    { text: 'First Aid / CPR Certification', section: 'Compliance', icon: '🛡️', elementId: 'sr-first-aid' },
+    { text: 'Manual Handling Training', section: 'Compliance', icon: '🛡️', elementId: 'sr-manual-handling' },
+    { text: 'Carer Induction Completed', section: 'Compliance', icon: '🛡️', elementId: 'sr-induction' },
+    { text: 'COVID-19 Vaccination Record', section: 'Compliance', icon: '🛡️', elementId: 'sr-covid' },
+    // Fields
+    { text: 'Account Location visibility', section: 'Field Config', icon: '🗂️', elementId: 'sr-field-location' },
+    { text: 'Facility visibility', section: 'Field Config', icon: '🗂️', elementId: 'sr-field-facility' },
+    { text: 'Shift Type visibility', section: 'Field Config', icon: '🗂️', elementId: 'sr-field-shift-type' },
+    { text: 'Allowance visibility', section: 'Field Config', icon: '🗂️', elementId: 'sr-field-allowance' },
+    { text: 'Address visibility', section: 'Field Config', icon: '🗂️', elementId: 'sr-field-address' },
+    { text: 'Instructions visibility', section: 'Field Config', icon: '🗂️', elementId: 'sr-field-instructions' },
+    { text: 'Tasks visibility', section: 'Field Config', icon: '🗂️', elementId: 'sr-field-tasks' },
+    { text: 'Shift Related Forms visibility', section: 'Field Config', icon: '🗂️', elementId: 'sr-field-forms' },
+    { text: 'Pay Group visibility', section: 'Field Config', icon: '🗂️', elementId: 'sr-field-pay-group' },
+    { text: 'Require Client Signature visibility', section: 'Field Config', icon: '🗂️', elementId: 'sr-field-signature' },
+    { text: 'Shift Bonus visibility', section: 'Field Config', icon: '🗂️', elementId: 'sr-field-bonus' },
+    // Defaults
+    { text: 'Default shift type', section: 'Defaults', icon: '⚙️', elementId: 'sr-default-shift-type' },
+    { text: 'Default account location', section: 'Defaults', icon: '⚙️', elementId: 'sr-default-location' },
+    { text: 'Default start time', section: 'Defaults', icon: '⚙️', elementId: 'sr-default-start' },
+    { text: 'Default end time', section: 'Defaults', icon: '⚙️', elementId: 'sr-default-end' },
+    { text: 'Default pay group', section: 'Defaults', icon: '⚙️', elementId: 'sr-default-pay-group' },
+    { text: 'Default repeat pattern', section: 'Defaults', icon: '⚙️', elementId: 'sr-default-repeat' },
+    { text: 'Notify carer by default', section: 'Defaults', icon: '⚙️', elementId: 'sr-default-notify' },
+    { text: 'Require client signature by default', section: 'Defaults', icon: '⚙️', elementId: 'sr-default-signature' },
+    // Autofill
+    { text: 'Client → price book, fund, address, forms', section: 'Autofill', icon: '✨', elementId: 'sr-autofill-client' },
+    { text: 'Calendar slot click → date & time', section: 'Autofill', icon: '✨', elementId: 'sr-autofill-calendar' },
+    { text: 'Shift type + carer → allowance & pay group', section: 'Autofill', icon: '✨', elementId: 'sr-autofill-allowance' },
+    { text: 'Returning client → suggest recurrence', section: 'Autofill', icon: '✨', elementId: 'sr-autofill-recurrence' },
+    { text: 'Auto-trigger Smart Match', section: 'Autofill', icon: '✨', elementId: 'sr-autofill-smartmatch' },
+    // Publish
+    { text: 'Client must have active funding (blocker)', section: 'Publish Rules', icon: '🚦', elementId: 'sr-pub-funding' },
+    { text: 'Client must have price book assigned (blocker)', section: 'Publish Rules', icon: '🚦', elementId: 'sr-pub-pricebook' },
+    { text: 'Carer must be assigned – no vacant publish (blocker)', section: 'Publish Rules', icon: '🚦', elementId: 'sr-pub-carer' },
+    { text: 'Fund balance must cover shift cost (blocker)', section: 'Publish Rules', icon: '🚦', elementId: 'sr-pub-fund-balance' },
+    { text: 'Shift must have at least one task (blocker)', section: 'Publish Rules', icon: '🚦', elementId: 'sr-pub-task' },
+    { text: 'Carer will exceed weekly hour limit (warning)', section: 'Publish Rules', icon: '🚦', elementId: 'sr-pub-hour-limit' },
+    { text: 'No instructions entered (warning)', section: 'Publish Rules', icon: '🚦', elementId: 'sr-pub-no-instructions' },
+    { text: "Shift type doesn't match client's primary service (warning)", section: 'Publish Rules', icon: '🚦', elementId: 'sr-pub-shift-type-mismatch' },
+    // Approval
+    { text: 'No approval required', section: 'Approval', icon: '✅', elementId: 'sr-approval-none' },
+    { text: 'Require approval above a threshold', section: 'Approval', icon: '✅', elementId: 'sr-approval-threshold' },
+    { text: 'Require approval for all shifts', section: 'Approval', icon: '✅', elementId: 'sr-approval-all' },
+    { text: 'Approval threshold hours and cost', section: 'Approval', icon: '✅', elementId: 'sr-approval-approvers' },
+    { text: 'Approve once per recurring series', section: 'Approval', icon: '✅', elementId: 'sr-approval-series' },
+  ];
+
+  const searchInput = document.getElementById('search-input');
+  const searchDropdown = document.getElementById('search-dropdown');
+  const searchClear = document.getElementById('search-clear');
+  let focusedIdx = -1;
+
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.trim().toLowerCase();
+    searchClear.style.display = q ? 'block' : 'none';
+    if (!q) { searchDropdown.style.display = 'none'; return; }
+    const matches = SEARCH_INDEX.filter(item => item.text.toLowerCase().includes(q) || item.section.toLowerCase().includes(q));
+    if (!matches.length) {
+      searchDropdown.innerHTML = `<div class="search-no-results">No settings match "<strong>${q}</strong>"</div>`;
+    } else {
+      searchDropdown.innerHTML = matches.slice(0, 8).map((m, i) => {
+        const hl = m.text.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<mark>$1</mark>');
+        return `<div class="search-result" data-idx="${i}" onclick="jumpToResult('${m.elementId}')">
+          <span class="search-result-icon">${m.icon}</span>
+          <span class="search-result-text">${hl}</span>
+          <span class="search-result-section">${m.section}</span>
+        </div>`;
+      }).join('');
+    }
+    searchDropdown.style.display = 'block';
+    focusedIdx = -1;
+  });
+
+  searchInput.addEventListener('keydown', e => {
+    const results = searchDropdown.querySelectorAll('.search-result');
+    if (e.key === 'ArrowDown') { e.preventDefault(); focusedIdx = Math.min(focusedIdx + 1, results.length - 1); updateFocus(results); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); focusedIdx = Math.max(focusedIdx - 1, 0); updateFocus(results); }
+    else if (e.key === 'Enter' && focusedIdx >= 0) { const id = results[focusedIdx]?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1]; if(id) jumpToResult(id); }
+    else if (e.key === 'Escape') { clearSearch(); }
+  });
+
+  function updateFocus(results) {
+    results.forEach((r, i) => r.classList.toggle('focused', i === focusedIdx));
+    results[focusedIdx]?.scrollIntoView({ block: 'nearest' });
+  }
+
+  // Map each sr- prefix to its parent card ID (for null fallback)
+  function cardForElement(elementId) {
+    if (/^sr-(police|wwc|first|manual|induction|covid)/.test(elementId)) return 'card-compliance';
+    if (elementId.startsWith('sr-field-'))    return 'card-fields';
+    if (elementId.startsWith('sr-default-'))  return 'card-defaults';
+    if (elementId.startsWith('sr-autofill-')) return 'card-autofill';
+    if (elementId.startsWith('sr-pub-'))      return 'card-publish';
+    if (elementId.startsWith('sr-approval-')) return 'card-approval';
+    return null;
+  }
+
+  function highlightEl(el, delay) {
+    setTimeout(() => {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => {
+        el.classList.remove('row-highlight');
+        void el.offsetWidth;
+        el.classList.add('row-highlight');
+        el.addEventListener('animationend', () => el.classList.remove('row-highlight'), { once: true });
+      }, 450);
+    }, delay);
+  }
+
+  function jumpToResult(elementId) {
+    clearSearch();
+    let el = document.getElementById(elementId);
+
+    // If the element isn't in the DOM (e.g. inactive approval option in read-only mode),
+    // fall back to scrolling to and highlighting the parent card body
+    if (!el) {
+      const cardId = cardForElement(elementId);
+      if (cardId) {
+        const card = document.getElementById(cardId);
+        if (card) {
+          const wasCollapsed = card.classList.contains('collapsed');
+          if (wasCollapsed) card.classList.remove('collapsed');
+          const target = card.querySelector('.card-body') || card;
+          highlightEl(target, wasCollapsed ? 200 : 0);
+        }
+      }
+      return;
+    }
+
+    // Expand the parent card if it's collapsed
+    const card = el.closest('.card');
+    const wasCollapsed = card?.classList.contains('collapsed');
+    if (wasCollapsed) card.classList.remove('collapsed');
+
+    // If it's inside the approval-sub, make sure that's visible too
+    const approvalSub = el.closest('#approval-sub');
+    if (approvalSub) approvalSub.style.display = '';
+
+    highlightEl(el, wasCollapsed ? 200 : 0);
+  }
+
+  function clearSearch() {
+    searchInput.value = '';
+    searchClear.style.display = 'none';
+    searchDropdown.style.display = 'none';
+    focusedIdx = -1;
+  }
+
+  document.addEventListener('click', e => {
+    if (!document.getElementById('search-wrap').contains(e.target)) searchDropdown.style.display = 'none';
+  });
+
+  // ── Card-level View / Edit mode ──────────────────────
+  const cardEditHtml     = {};  // last-saved edit HTML per card
+  const cardEditSnapshot = {};  // HTML at moment Edit clicked (for cancel)
+
+  // ── Read-only renderers ───────────────────────────────
+  function badge(text, cls) { return `<span class="ro-badge ${cls}">${text}</span>`; }
+
+  function renderCompliance(card) {
+    return '<div class="ro-list">' +
+      [...card.querySelectorAll('.check-row')].map(r => {
+        const name = r.querySelector('.check-name').textContent.trim();
+        const cls  = r.querySelector('.active-block') ? 'ro-block'
+                   : r.querySelector('.active-warn')  ? 'ro-warn' : 'ro-off';
+        const lbl  = r.querySelector('.active-block') ? 'Block'
+                   : r.querySelector('.active-warn')  ? 'Warn'  : 'Off';
+        return `<div class="ro-row" id="${r.id}"><span class="ro-name">${name}</span>${badge(lbl, cls)}</div>`;
+      }).join('') + '</div>';
+  }
+
+  function renderFields(card) {
+    return '<div class="ro-list">' +
+      [...card.querySelectorAll('.field-table tbody tr')].map(r => {
+        const name   = r.querySelector('.field-name').childNodes[0].textContent.trim();
+        const active = r.querySelector('.radio-btn.active')?.textContent?.trim() || 'Optional';
+        const cls    = active === 'Required' ? 'ro-req' : active === 'Hidden' ? 'ro-hid' : 'ro-opt';
+        return `<div class="ro-row" id="${r.id}"><span class="ro-name">${name}</span>${badge(active, cls)}</div>`;
+      }).join('') + '</div>';
+  }
+
+  function renderDefaults(card) {
+    const kvMap = [
+      ['sr-default-shift-type', 'Shift type'],
+      ['sr-default-location',   'Account location'],
+      ['sr-default-start',      'Start time'],
+      ['sr-default-end',        'End time'],
+      ['sr-default-pay-group',  'Pay group'],
+      ['sr-default-repeat',     'Repeat pattern'],
+    ];
+    const kvs = kvMap.map(([id, lbl]) => {
+      const el  = card.querySelector(`#${id}`);
+      const val = el?.querySelector('select')?.value || el?.querySelector('input[type="time"]')?.value || '—';
+      return `<div class="ro-kv-item" id="${id}"><span class="ro-kv-label">${lbl}</span><span class="ro-kv-value">${val}</span></div>`;
+    }).join('');
+    const toggles = [...card.querySelectorAll('.toggle-row[id]')].map(r => {
+      const lbl = r.querySelector('.toggle-label').textContent.trim();
+      const on  = r.querySelector('input[type="checkbox"]').checked;
+      return `<div class="ro-row" id="${r.id}"><span class="ro-name">${lbl}</span>${badge(on ? 'On' : 'Off', on ? 'ro-on' : 'ro-off')}</div>`;
+    }).join('');
+    return `<div class="ro-kv" style="margin-bottom:14px">${kvs}</div><div class="ro-list">${toggles}</div>`;
+  }
+
+  function renderAutofill(card) {
+    return '<div class="ro-list">' +
+      [...card.querySelectorAll('.rule-row')].map(r => {
+        const icon = r.querySelector('.rule-icon').textContent.trim();
+        const name = r.querySelector('.rule-name').childNodes[0].textContent.trim();
+        const on   = r.querySelector('input[type="checkbox"]').checked;
+        return `<div class="ro-row" id="${r.id}"><span class="ro-name"><span class="ro-icon">${icon}</span>${name}</span>${badge(on ? 'On' : 'Off', on ? 'ro-on' : 'ro-off')}</div>`;
+      }).join('') + '</div>';
+  }
+
+  function renderPublish(card) {
+    const rows = [...card.querySelectorAll('.publish-rule-row')];
+    const blockers = rows.slice(0, 5);
+    const warnings = rows.slice(5);
+    const toRow = r => {
+      const name = r.querySelector('.publish-rule-name').textContent.trim();
+      const on   = r.querySelector('input[type="checkbox"]').checked;
+      return `<div class="ro-row" id="${r.id}"><span class="ro-name">${name}</span>${badge(on ? 'On' : 'Off', on ? 'ro-on' : 'ro-off')}</div>`;
+    };
+    return `
+      <div class="ro-section-label" style="color:#c0392b">Blockers</div>
+      <div class="ro-list" style="margin-bottom:10px">${blockers.map(toRow).join('')}</div>
+      <div class="ro-section-label" style="color:#b8730a">Warnings</div>
+      <div class="ro-list">${warnings.map(toRow).join('')}</div>
+      <div style="font-size:12px;color:#9aa5b4;margin-top:10px;padding-top:10px;border-top:1px solid #f4f5f7">🔗 Overlapping shifts → Scheduler settings</div>`;
+  }
+
+  function renderApproval(card) {
+    const selectedOption = card.querySelector('.approval-option.selected');
+    const mode = selectedOption?.querySelector('.approval-title')?.textContent?.trim() || 'No approval required';
+    const selectedId = selectedOption?.id || 'sr-approval-none';
+    const isThreshold = mode.includes('threshold');
+    let extra = '';
+    if (isThreshold) {
+      const inputs = card.querySelectorAll('.threshold-row input');
+      const hrs  = inputs[0]?.value || '8';
+      const cost = inputs[1]?.value || '500';
+      const approvers = [...card.querySelectorAll('.chip:not(.chip-add)')].map(c => c.textContent.trim()).join(', ');
+      const series = card.querySelector('#sr-approval-series input')?.checked;
+      extra = `<div class="ro-kv" style="margin-top:12px">
+        <div class="ro-kv-item"><span class="ro-kv-label">Threshold</span><span class="ro-kv-value">&gt;${hrs} hrs or $${cost}</span></div>
+        <div class="ro-kv-item" id="sr-approval-approvers"><span class="ro-kv-label">Approvers</span><span class="ro-kv-value">${approvers}</span></div>
+        <div class="ro-kv-item" id="sr-approval-series"><span class="ro-kv-label">Per series</span><span class="ro-kv-value">${series ? 'Yes — once per series' : 'No — per occurrence'}</span></div>
+      </div>`;
+    }
+    const modeCls = mode.includes('No') ? 'ro-off' : 'ro-warn';
+    return `<div class="ro-row" id="${selectedId}" style="border:none;padding-bottom:0">
+      <span class="ro-name">Approval mode</span>${badge(mode, modeCls)}
+    </div>${extra}`;
+  }
+
+  const CARD_RENDERERS = {
+    'card-compliance': renderCompliance,
+    'card-fields':     renderFields,
+    'card-defaults':   renderDefaults,
+    'card-autofill':   renderAutofill,
+    'card-publish':    renderPublish,
+    'card-approval':   renderApproval,
+  };
+
+  function initCardReadOnly(card) {
+    const body = card.querySelector('.card-body');
+    const renderer = CARD_RENDERERS[card.id];
+    if (!renderer) return;
+    // Store the editable HTML before replacing
+    if (!cardEditHtml[card.id]) cardEditHtml[card.id] = body.innerHTML;
+    // Render the display-only view
+    body.innerHTML = renderer(card);
+    card.classList.add('card-readonly');
+    card.classList.remove('card-editing');
+    // Show edit button, hide save/cancel
+    card.querySelector('.card-edit-btn').style.display   = 'inline-flex';
+    card.querySelector('.card-save-btn').style.display   = 'none';
+    card.querySelector('.card-cancel-btn').style.display = 'none';
+  }
+
+  function enterCardEdit(card) {
+    // Restore editable HTML
+    const body = card.querySelector('.card-body');
+    cardEditSnapshot[card.id] = cardEditHtml[card.id];
+    body.innerHTML = cardEditHtml[card.id];
+    card.classList.remove('card-readonly', 'collapsed');
+    card.classList.add('card-editing');
+    card.querySelector('.card-edit-btn').style.display   = 'none';
+    card.querySelector('.card-save-btn').style.display   = 'inline-flex';
+    card.querySelector('.card-cancel-btn').style.display = 'inline-flex';
+  }
+
+  function saveCardEdit(card) {
+    // Persist the new editable HTML (values have changed)
+    cardEditHtml[card.id] = card.querySelector('.card-body').innerHTML;
+    initCardReadOnly(card);
+    const ind = document.getElementById('save-indicator');
+    ind.style.display = 'flex';
+    setTimeout(() => ind.style.display = 'none', 2000);
+    setTimeout(buildSummary, 50);
+  }
+
+  function cancelCardEdit(card) {
+    // Restore snapshot from before edit started
+    cardEditHtml[card.id] = cardEditSnapshot[card.id];
+    initCardReadOnly(card);
+    setTimeout(buildSummary, 50);
+  }
+
+  // ── Summary ────────────────────────────────────────────
+  function badge(text, cls) { return `<span class="s-badge ${cls}">${text}</span>`; }
+
+  function buildSummary() {
+    const body = document.getElementById('summary-body');
+
+    // Compliance
+    const compChecks = [];
+    document.querySelectorAll('#row1 .check-row').forEach(row => {
+      const name = row.querySelector('.check-name')?.textContent?.trim().split('(')[0].trim();
+      const active = row.querySelector('.active-block') ? 'block' : row.querySelector('.active-warn') ? 'warn' : null;
+      if (active && name) compChecks.push({ name, active });
+    });
+    const compText = compChecks.length
+      ? compChecks.map(c => `${c.name.split('/')[0].trim()}: ${badge(c.active === 'block' ? 'Block' : 'Warn', 'c.active' === 'block' ? 's-block' : c.active === 'block' ? 's-block' : 's-warn')}`).join(' · ')
+      : badge('All checks off', 's-off');
+
+    // Re-do compliance properly
+    const compParts = [];
+    document.querySelectorAll('#row1 .check-row').forEach(row => {
+      const nameEl = row.querySelector('.check-name');
+      if (!nameEl) return;
+      const name = nameEl.textContent.trim().split('(')[0].trim().split('/')[0].trim();
+      if (row.querySelector('.active-block')) compParts.push(`${name}: ${badge('Block','s-block')}`);
+      else if (row.querySelector('.active-warn')) compParts.push(`${name}: ${badge('Warn','s-warn')}`);
+    });
+    const compSummary = compParts.length ? compParts.join(' &nbsp;·&nbsp; ') : badge('All checks off','s-off');
+
+    // Fields
+    const required = [], hidden = [];
+    document.querySelectorAll('#row1 .field-table tbody tr').forEach(row => {
+      const name = row.querySelector('.field-name')?.childNodes[0]?.textContent?.trim();
+      if (!name) return;
+      if (row.querySelector('.radio-btn.active')?.textContent?.trim() === 'Required') required.push(name);
+      if (row.querySelector('.radio-btn.active')?.textContent?.trim() === 'Hidden') hidden.push(name);
+    });
+    const fieldParts = [];
+    if (required.length) fieldParts.push(`${badge(required.length + ' Required','s-req')} ${required.slice(0,2).join(', ')}${required.length > 2 ? ' +' + (required.length-2) + ' more' : ''}`);
+    if (hidden.length) fieldParts.push(`${badge(hidden.length + ' Hidden','s-hid')} ${hidden.slice(0,2).join(', ')}${hidden.length > 2 ? ' +' + (hidden.length-2) + ' more' : ''}`);
+    const fieldSummary = fieldParts.length ? fieldParts.join(' &nbsp;·&nbsp; ') : 'All fields optional';
+
+    // Defaults
+    const shiftType = document.querySelector('#row2 .card:first-child select')?.value || 'Personal Care';
+    const startTime = document.querySelector('#row2 input[type="time"]:first-of-type')?.value || '09:00';
+    const endTime = document.querySelector('#row2 input[type="time"]:last-of-type')?.value || '17:00';
+    const notifyCarer = document.querySelector('#row2 .card:first-child .toggle input[type="checkbox"]:first-of-type')?.checked;
+    const defaultSummary = `${shiftType} &nbsp;·&nbsp; ${startTime}–${endTime} &nbsp;·&nbsp; Notify carer: ${notifyCarer ? badge('On','s-on') : badge('Off','s-off')}`;
+
+    // Autofill
+    const autofillToggles = document.querySelectorAll('#row2 .card:last-child .toggle input');
+    const autofillOn = [...autofillToggles].filter(t => t.checked).length;
+    const autofillLabels = [...document.querySelectorAll('#row2 .card:last-child .rule-name')].filter((_, i) => autofillToggles[i]?.checked).map(el => el.childNodes[0]?.textContent?.trim().split('→')[0].trim().split('+')[0].trim());
+    const autofillSummary = autofillOn
+      ? `${badge(autofillOn + ' of ' + autofillToggles.length + ' rules on','s-on')} &nbsp; ${autofillLabels.slice(0,2).join(', ')}${autofillLabels.length > 2 ? ' + more' : ''}`
+      : badge('All rules off','s-off');
+
+    // Publish blockers
+    const blockerToggles = document.querySelectorAll('#row3 .card:first-child .publish-rule-row .toggle input');
+    const blockersOn = [...blockerToggles].filter(t => t.checked).length;
+    const warningToggles = document.querySelectorAll('#row3 .card:first-child .toggle input');
+    const warnOn = warningToggles.length - blockersOn > 0 ? [...warningToggles].slice(blockersOn).filter(t => t.checked).length : 0;
+    const publishSummary = `${badge(blockersOn + ' blockers','s-block')} active &nbsp;·&nbsp; ${warnOn > 0 ? badge(warnOn + ' warnings','s-warn') + ' active' : badge('No warnings','s-off')}`;
+
+    // Approval
+    const selectedApproval = document.querySelector('.approval-option.selected .approval-title')?.textContent?.trim() || 'No approval required';
+    const approvalSummary = selectedApproval.includes('threshold')
+      ? `Threshold: ${badge('>' + (document.querySelector('.threshold-row input')?.value || '8') + ' hrs','s-warn')} or ${badge('$' + (document.querySelectorAll('.threshold-row input')[1]?.value || '500'),'s-warn')}`
+      : selectedApproval.includes('all')
+      ? badge('All shifts need approval','s-warn')
+      : badge('No approval required','s-off');
+
+    const cardMap = { 'sr-police-check': 'card-compliance', 'sr-field-location': 'card-fields', 'sr-default-shift-type': 'card-defaults', 'sr-autofill-client': 'card-autofill', 'sr-pub-funding': 'card-publish', 'sr-approval-none': 'card-approval' };
+    const editBtn = (id) => `<span class="summary-edit" onclick="const c=document.getElementById('${cardMap[id]}'); jumpToResult('${id}'); if(c?.classList.contains('card-readonly')) enterCardEdit(c);">✏️ Edit</span>`;
+    body.innerHTML = `
+      <div class="summary-row"><div class="summary-section"><span class="summary-section-icon">🛡️</span><span class="summary-section-name">Compliance</span></div><div class="summary-text">${compSummary}</div>${editBtn('sr-police-check')}</div>
+      <div class="summary-row"><div class="summary-section"><span class="summary-section-icon">🗂️</span><span class="summary-section-name">Fields</span></div><div class="summary-text">${fieldSummary}</div>${editBtn('sr-field-location')}</div>
+      <div class="summary-row"><div class="summary-section"><span class="summary-section-icon">⚙️</span><span class="summary-section-name">Defaults</span></div><div class="summary-text">${defaultSummary}</div>${editBtn('sr-default-shift-type')}</div>
+      <div class="summary-row"><div class="summary-section"><span class="summary-section-icon">✨</span><span class="summary-section-name">Autofill</span></div><div class="summary-text">${autofillSummary}</div>${editBtn('sr-autofill-client')}</div>
+      <div class="summary-row"><div class="summary-section"><span class="summary-section-icon">🚦</span><span class="summary-section-name">Publish</span></div><div class="summary-text">${publishSummary}</div>${editBtn('sr-pub-funding')}</div>
+      <div class="summary-row"><div class="summary-section"><span class="summary-section-icon">✅</span><span class="summary-section-name">Approval</span></div><div class="summary-text">${approvalSummary}</div>${editBtn('sr-approval-none')}</div>
+    `;
+  }
+
+  // Run on load + re-run on any input change
+  document.addEventListener('DOMContentLoaded', () => {
+    const CARD_IDS = ['card-compliance','card-fields','card-defaults','card-autofill','card-publish','card-approval'];
+    // Assign IDs and wire up each card
+    [...document.querySelectorAll('#row1-grid .card, #row2-grid .card, #row3-grid .card')].forEach((card, i) => {
+      card.id = CARD_IDS[i];
+      // Detach header click from collapse; move to header-left only
+      const header = card.querySelector('.card-header');
+      const left   = header.querySelector('.card-header-left');
+      const icon   = header.querySelector('.collapse-icon');
+      header.removeAttribute('onclick');
+      left.style.cursor = 'pointer';
+      left.onclick  = () => card.classList.toggle('collapsed');
+      icon.style.cursor = 'pointer';
+      icon.onclick  = (e) => { e.stopPropagation(); card.classList.toggle('collapsed'); };
+      // Inject edit controls into header
+      const controls = document.createElement('div');
+      controls.className = 'card-header-right';
+      controls.innerHTML = `
+        <button class="card-edit-btn"   onclick="enterCardEdit(this.closest('.card'))">✏️ Edit</button>
+        <button class="card-save-btn"   onclick="saveCardEdit(this.closest('.card'))">Save</button>
+        <button class="card-cancel-btn" onclick="cancelCardEdit(this.closest('.card'))">Cancel</button>`;
+      header.insertBefore(controls, icon);
+      // Initialize in read-only mode
+      initCardReadOnly(card);
+    });
+    buildSummary();
+    document.querySelector('.content').addEventListener('change', buildSummary);
+    document.querySelector('.content').addEventListener('click', () => setTimeout(buildSummary, 50));
+  });
+  setTimeout(buildSummary, 100);
+
+  // Highlight anchor on scroll
+  const content = document.getElementById('main-content');
+  const sections = ['row1','row2','row3'];
+  content.addEventListener('scroll', () => {
+    const scrollTop = content.scrollTop + 80;
+    let current = sections[0];
+    sections.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.offsetTop <= scrollTop) current = id;
+    });
+    document.querySelectorAll('.anchor-item').forEach((a, i) => {
+      a.classList.toggle('active', sections[i] === current);
+    });
+  });
+</script>
+</body>
+</html>
