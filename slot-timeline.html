@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slot Timeline</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb;
+    --gray-300: #d1d5db; --gray-400: #9ca3af; --gray-500: #6b7280;
+    --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937;
+    --teal: #0ea882; --blue: #0077cc;
+  }
+  body { font-family: var(--font); background: white; color: var(--gray-800); font-size: 13px; padding: 32px; }
+
+  h2 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .sub { font-size: 13px; color: var(--gray-500); margin-bottom: 18px; }
+
+  /* LAYOUT */
+  .layout { display: flex; gap: 20px; align-items: flex-start; }
+  .left { flex: 1; min-width: 0; }
+  .right { width: 268px; flex-shrink: 0; }
+
+  /* TIMELINE */
+  .tl { border: 1px solid var(--gray-200); border-radius: 10px; overflow: hidden; }
+  .tl-head { display: flex; background: #242F65; border-bottom: 1px solid #1a2350; }
+  .label-col { width: 140px; min-width: 140px; padding: 9px 14px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: rgba(255,255,255,0.85); border-right: 1px solid rgba(255,255,255,0.2); }
+  .axis { flex: 1; display: grid; grid-template-columns: repeat(10, 1fr); }
+  .tick { font-size: 11px; color: rgba(255,255,255,0.75); padding: 9px 0 9px 5px; border-left: 1px solid rgba(255,255,255,0.15); font-weight: 500; }
+
+  .section-row { display: flex; background: var(--gray-50); border-bottom: 1px solid var(--gray-200); }
+  .section-label { width: 140px; min-width: 140px; padding: 6px 14px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--gray-400); border-right: 1px solid var(--gray-200); display: flex; align-items: center; gap: 5px; }
+
+  .slot-row { display: flex; border-bottom: 1px solid var(--gray-100); min-height: 50px; }
+  .slot-row:last-child { border-bottom: none; }
+  .row-label { width: 140px; min-width: 140px; padding: 0 12px; border-right: 1px solid var(--gray-200); display: flex; align-items: center; gap: 8px; }
+  .avatar { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; flex-shrink: 0; }
+  .name { font-size: 12px; font-weight: 500; color: var(--gray-700); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .track { flex: 1; position: relative; background: repeating-linear-gradient(to right, transparent, transparent calc(10% - 1px), var(--gray-100) calc(10% - 1px), var(--gray-100) 10%); }
+
+  .block { position: absolute; top: 7px; height: 36px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; padding: 0 9px; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; transition: filter .12s; border: 1.5px solid transparent; font-family: var(--font); }
+  .block:hover { filter: brightness(.93); }
+  .block.selected { box-shadow: 0 0 0 2.5px var(--blue); }
+  .block-dur { font-size: 10px; font-weight: 400; margin-left: 5px; opacity: .7; }
+
+  /* BREAK BLOCKS */
+  .break-block {
+    background: #f9fafb;
+    color: #6b7280;
+    border: 1.5px dashed #9ca3af;
+    background-image: repeating-linear-gradient(
+      -45deg, transparent, transparent 5px,
+      rgba(0,0,0,.04) 5px, rgba(0,0,0,.04) 10px
+    );
+    font-size: 10px;
+    font-weight: 500;
+    z-index: 2;
+  }
+  .break-block:hover { filter: none; background-color: #f3f4f6; }
+  .break-icon { margin-right: 3px; }
+
+  .add-row { display: flex; align-items: center; gap: 7px; padding: 10px 14px; color: var(--gray-400); cursor: pointer; font-size: 12px; border-top: 1px dashed var(--gray-200); }
+  .add-row:hover { color: var(--blue); background: #f0f7ff; }
+
+  /* COVERAGE */
+  .coverage { margin-top: 12px; }
+  .cov-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .cov-label { font-size: 12px; font-weight: 600; color: var(--gray-600); }
+  .cov-pct { font-size: 12px; font-weight: 600; }
+  .cov-track { height: 6px; background: var(--gray-200); border-radius: 3px; overflow: hidden; margin-bottom: 5px; }
+  .cov-fill { height: 100%; background: var(--teal); border-radius: 3px; transition: width .3s; }
+  .cov-info { font-size: 11px; color: var(--gray-500); }
+  .cov-warn { color: #d97706; }
+  .cov-ok { color: var(--teal); }
+
+  /* EDITOR PANEL */
+  .editor-panel { border: 1px solid var(--gray-200); border-radius: 10px; overflow: hidden; position: sticky; top: 24px; }
+  .editor-empty { padding: 32px 16px; text-align: center; color: var(--gray-400); font-size: 12px; line-height: 1.6; }
+  .editor-empty svg { display: block; margin: 0 auto 10px; opacity: .4; }
+  .editor-head { padding: 12px 14px; background: var(--gray-50); border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; justify-content: space-between; }
+  .editor-head-title { font-size: 13px; font-weight: 600; color: var(--gray-800); }
+  .editor-head-type { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border-radius: 20px; }
+  .type-client { background: #dbeafe; color: #1e40af; }
+  .type-staff  { background: #ede9fe; color: #5b21b6; }
+  .editor-body { padding: 14px; }
+  .field { margin-bottom: 12px; }
+  .field label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--gray-500); display: block; margin-bottom: 4px; }
+  .field input, .field select { width: 100%; padding: 7px 9px; border: 1px solid var(--gray-300); border-radius: 6px; font-size: 13px; color: var(--gray-800); background: white; font-family: var(--font); }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 2px rgba(0,119,204,.15); }
+  .time-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .err { border-color: #ef4444 !important; }
+  .err-msg { font-size: 11px; color: #dc2626; margin-bottom: 10px; display: none; padding: 0 14px; }
+  .err-msg.show { display: block; }
+  .editor-footer { padding: 12px 14px; border-top: 1px solid var(--gray-200); display: flex; flex-direction: column; gap: 8px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 7px 14px; border-radius: 6px; border: 1px solid var(--gray-300); background: white; color: var(--gray-700); font-size: 12px; font-weight: 500; cursor: pointer; font-family: var(--font); width: 100%; }
+  .btn:hover { background: var(--gray-100); }
+  .btn.primary { background: var(--gray-800); color: white; border-color: var(--gray-800); }
+  .btn.primary:hover { background: var(--gray-700); }
+  .btn.danger { color: #dc2626; border-color: #fca5a5; background: #fff5f5; }
+  .btn.danger:hover { background: #fee2e2; }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* BREAKS IN EDITOR */
+  .breaks-section { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--gray-200); }
+  .breaks-heading { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--gray-500); margin-bottom: 8px; }
+  .break-item { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
+  .bi-times { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; flex: 1; }
+  .bi-times input[type="time"] { width: 100%; padding: 5px 7px; border: 1px solid var(--gray-300); border-radius: 5px; font-size: 12px; font-family: var(--font); color: var(--gray-800); background: white; }
+  .bi-times input[type="time"]:focus { outline: none; border-color: var(--blue); }
+  .break-remove { flex-shrink: 0; width: 24px; height: 24px; border-radius: 4px; border: 1px solid var(--gray-200); background: white; color: var(--gray-400); cursor: pointer; font-size: 15px; line-height: 1; display: flex; align-items: center; justify-content: center; font-family: var(--font); }
+  .break-remove:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+  .add-break-btn { display: flex; align-items: center; gap: 5px; background: none; border: 1px dashed var(--gray-300); border-radius: 6px; color: var(--gray-500); font-size: 12px; cursor: pointer; padding: 6px 10px; width: 100%; font-family: var(--font); margin-top: 2px; }
+  .add-break-btn:hover { border-color: var(--blue); color: var(--blue); background: #f0f7ff; }
+  .break-err { font-size: 11px; color: #dc2626; margin-top: 4px; display: none; }
+  .break-err.show { display: block; }
+  .no-breaks { font-size: 11px; color: var(--gray-400); margin-bottom: 6px; }
+</style>
+</head>
+<body>
+
+<div style="margin-bottom:18px;">
+  <div id="dateLabel" style="font-size:12px;font-weight:600;color:var(--gray-500);margin-bottom:2px;"></div>
+  <h2 style="margin-bottom:4px;">Slot timeline</h2>
+  <p class="sub" style="margin-bottom:0;">Set specific time windows and services per client, and assign staff to cover them within this shift.</p>
+</div>
+
+<div class="layout">
+
+  <!-- LEFT: TIMELINE -->
+  <div class="left">
+    <div class="tl">
+      <div class="tl-head">
+        <div class="label-col">Slot</div>
+        <div class="axis" id="axis"></div>
+      </div>
+
+      <div class="section-row">
+        <div class="section-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>
+          Clients
+        </div>
+        <div style="flex:1"></div>
+      </div>
+      <div id="clientRows"></div>
+      <div class="add-row" onclick="addClient()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Add client slot
+      </div>
+
+      <div class="section-row" style="border-top:1px solid var(--gray-200)">
+        <div class="section-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Staff
+        </div>
+        <div style="flex:1"></div>
+      </div>
+      <div id="staffRows"></div>
+      <div class="add-row" onclick="addStaff()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Add staff slot
+      </div>
+    </div>
+
+    <div class="coverage">
+      <div class="cov-top">
+        <span class="cov-label">Staff coverage</span>
+        <span class="cov-pct" id="covPct">100%</span>
+      </div>
+      <div class="cov-track"><div class="cov-fill" id="covFill" style="width:100%"></div></div>
+      <div class="cov-info" id="covInfo"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: EDITOR PANEL -->
+  <div class="right">
+    <div class="editor-panel" id="editorPanel">
+      <div class="editor-empty" id="editorEmpty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:28px;height:28px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Click a block to edit it
+      </div>
+      <div id="editorContent" style="display:none">
+        <div class="editor-head">
+          <span class="editor-head-title" id="editorTitle">Edit slot</span>
+          <span class="editor-head-type" id="editorType"></span>
+        </div>
+        <div class="editor-body">
+          <div class="field">
+            <label>Name</label>
+            <input id="eName" type="text">
+          </div>
+          <div class="time-row">
+            <div class="field">
+              <label>Start</label>
+              <input id="eStart" type="time">
+            </div>
+            <div class="field">
+              <label>End</label>
+              <input id="eEnd" type="time">
+            </div>
+          </div>
+          <div class="field" id="eExtraWrap">
+            <label id="eExtraLabel">Service type</label>
+            <select id="eExtra"></select>
+          </div>
+
+          <!-- BREAKS (staff only) -->
+          <div class="breaks-section" id="breaksSection" style="display:none">
+            <div class="breaks-heading">☕ Breaks</div>
+            <div id="breaksList"></div>
+            <div class="break-err" id="breakErr">Must be within staff hours, non-overlapping, and start before end.</div>
+            <button class="add-break-btn" onclick="addBreak()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:11px;height:11px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add break
+            </button>
+          </div>
+        </div>
+        <div class="err-msg" id="errMsg">End must be after start, and within 9am–6pm.</div>
+        <div class="editor-footer">
+          <div class="btn-row">
+            <button class="btn primary" onclick="saveEdit()">Save</button>
+            <button class="btn" onclick="closeEditor()">Cancel</button>
+          </div>
+          <button class="btn danger" onclick="deleteSlot()">Remove slot</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const S = 9, E = 18, SPAN = E - S;
+
+const CLIENT_PALETTES = [
+  {bg:'#dbeafe', border:'#3b82f6', text:'#1e40af'},
+  {bg:'#ffedd5', border:'#f97316', text:'#9a3412'},
+  {bg:'#fce7f3', border:'#ec4899', text:'#9d174d'},
+  {bg:'#dcfce7', border:'#22c55e', text:'#15803d'},
+  {bg:'#e0e7ff', border:'#6366f1', text:'#3730a3'},
+];
+const STAFF_PALETTES = [
+  {bg:'#ede9fe', border:'#7c3aed', text:'#5b21b6'},
+  {bg:'#d1fae5', border:'#10b981', text:'#065f46'},
+  {bg:'#fef3c7', border:'#f59e0b', text:'#92400e'},
+  {bg:'#fee2e2', border:'#ef4444', text:'#991b1b'},
+];
+
+const SERVICES = ['Personal care','Domestic assistance','Psychosocial coaching','Community access','Sleepover','Social support'];
+const PAYS     = ['Default paygroup','Senior carer rate','Weekend rate','Overnight rate'];
+
+let clients = [
+  {id:1, name:'Mary Chen',   start:9,  end:15, service:'Personal care'},
+  {id:2, name:'Jane Foster', start:12, end:18, service:'Psychosocial coaching'},
+];
+let staff = [
+  {id:1, name:'Admin Lalit', start:9,  end:16, pay:'Default paygroup', breaks:[{id:1,start:12,end:13}]},
+  {id:2, name:'Suyog KC',    start:13, end:18, pay:'Default paygroup', breaks:[]},
+];
+let nextC = 3, nextS = 3, nextBr = 10;
+let selected = null;
+
+const HOURS = Array.from({length:SPAN+1}, (_,i) => {
+  const h = S+i; return h<12 ? h+'am' : h===12 ? '12pm' : (h-12)+'pm';
+});
+
+function init() {
+  document.getElementById('axis').innerHTML = HOURS.map(h=>`<div class="tick">${h}</div>`).join('');
+  // Render date
+  const now = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('dateLabel').textContent =
+    days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
+}
+
+function pct(h)    { return ((h-S)/SPAN*100).toFixed(3)+'%'; }
+function wpct(s,e) { return ((e-s)/SPAN*100).toFixed(3)+'%'; }
+function initials(n) { return n.trim().split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2)||'?'; }
+
+function fmtH(h) {
+  const hr = Math.floor(h);
+  const min = Math.round((h - hr) * 60);
+  const m = min > 0 ? ':' + String(min).padStart(2,'0') : '';
+  return hr < 12 ? hr+m+'am' : hr===12 ? '12'+m+'pm' : (hr-12)+m+'pm';
+}
+function toTimeStr(h) {
+  const hr = Math.floor(h);
+  const min = Math.round((h - hr) * 60);
+  return String(hr).padStart(2,'0') + ':' + String(min).padStart(2,'0');
+}
+function parseTime(val) {
+  if (!val) return NaN;
+  const [h, m] = val.split(':').map(Number);
+  return h + m/60;
+}
+function durLabel(s, e) {
+  const mins = Math.round((e - s) * 60);
+  if (mins < 60) return mins + 'm';
+  const h = Math.floor(mins/60), m = mins%60;
+  return m ? h+'h'+m+'m' : h+'h';
+}
+
+function renderRows() {
+  renderList('clientRows', clients, CLIENT_PALETTES, 'client');
+  renderList('staffRows',  staff,   STAFF_PALETTES,  'staff');
+  renderCoverage();
+}
+
+function renderList(id, list, palettes, type) {
+  document.getElementById(id).innerHTML = list.map((item, idx) => {
+    const p = palettes[idx % palettes.length];
+    const isSel = selected && selected.id === item.id && selected.type === type;
+
+    let breakHtml = '';
+    if (type === 'staff' && item.breaks && item.breaks.length > 0) {
+      breakHtml = item.breaks.map(br =>
+        `<button class="block break-block"
+          style="left:${pct(br.start)};width:${wpct(br.start,br.end)}"
+          onclick="selectBlock(${item.id},'staff',event)"
+          title="Break: ${fmtH(br.start)}–${fmtH(br.end)} (${durLabel(br.start,br.end)})">
+          <span class="break-icon">☕</span>${fmtH(br.start)}–${fmtH(br.end)}
+        </button>`
+      ).join('');
+    }
+
+    return `<div class="slot-row">
+      <div class="row-label">
+        <div class="avatar" style="background:${p.bg};color:${p.text}">${initials(item.name)}</div>
+        <span class="name">${item.name}</span>
+      </div>
+      <div class="track">
+        <button class="block${isSel?' selected':''}"
+          style="left:${pct(item.start)};width:${wpct(item.start,item.end)};background:${p.bg};color:${p.text};border-color:${p.border}"
+          onclick="selectBlock(${item.id},'${type}',event)">
+          ${fmtH(item.start)}–${fmtH(item.end)}<span class="block-dur">${durLabel(item.start,item.end)}</span>
+        </button>
+        ${breakHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectBlock(id, type, evt) {
+  evt.stopPropagation();
+  if (selected && selected.id === id && selected.type === type) {
+    selected = null; hideEditor(); renderRows(); return;
+  }
+  selected = {id, type};
+  renderRows();
+  openEditor();
+}
+
+function openEditor() {
+  if (!selected) return;
+  const list = selected.type === 'client' ? clients : staff;
+  const item = list.find(x => x.id === selected.id);
+  if (!item) return;
+  const isClient = selected.type === 'client';
+
+  document.getElementById('editorEmpty').style.display = 'none';
+  document.getElementById('editorContent').style.display = 'block';
+  document.getElementById('editorTitle').textContent = item.name;
+  const typeEl = document.getElementById('editorType');
+  typeEl.textContent = isClient ? 'Client' : 'Staff';
+  typeEl.className = 'editor-head-type ' + (isClient ? 'type-client' : 'type-staff');
+
+  document.getElementById('eName').value  = item.name;
+  document.getElementById('eStart').value = toTimeStr(item.start);
+  document.getElementById('eEnd').value   = toTimeStr(item.end);
+
+  const opts = isClient ? SERVICES : PAYS;
+  const cur  = isClient ? item.service : item.pay;
+  document.getElementById('eExtraLabel').textContent = isClient ? 'Service type' : 'Pay group';
+  document.getElementById('eExtra').innerHTML = opts.map(o => `<option${o===cur?' selected':''}>${o}</option>`).join('');
+  document.getElementById('errMsg').classList.remove('show');
+
+  const breaksSection = document.getElementById('breaksSection');
+  if (!isClient) {
+    breaksSection.style.display = 'block';
+    renderBreaksList(item);
+  } else {
+    breaksSection.style.display = 'none';
+  }
+}
+
+function renderBreaksList(staffItem) {
+  const breaks = staffItem.breaks || [];
+  const list = document.getElementById('breaksList');
+  if (breaks.length === 0) {
+    list.innerHTML = '<p class="no-breaks">No breaks assigned</p>';
+    return;
+  }
+  list.innerHTML = breaks.map(br => `
+    <div class="break-item" data-brid="${br.id}">
+      <div class="bi-times">
+        <input type="time" class="br-start" value="${toTimeStr(br.start)}" data-brid="${br.id}">
+        <input type="time" class="br-end"   value="${toTimeStr(br.end)}"   data-brid="${br.id}">
+      </div>
+      <button class="break-remove" onclick="removeBreak(${br.id})" title="Remove break">×</button>
+    </div>
+  `).join('');
+}
+
+function addBreak() {
+  if (!selected || selected.type !== 'staff') return;
+  const item = staff.find(s => s.id === selected.id);
+  if (!item) return;
+  item.breaks = item.breaks || [];
+
+  // Place break at midpoint of the slot (30 min default)
+  const mid = (item.start + item.end) / 2;
+  const bS = parseFloat((Math.max(item.start, mid - 0.25)).toFixed(2));
+  const bE = parseFloat((Math.min(item.end,   bS + 0.5)).toFixed(2));
+
+  item.breaks.push({id: nextBr++, start: bS, end: bE});
+  document.getElementById('breakErr').classList.remove('show');
+  renderBreaksList(item);
+  renderRows();
+}
+
+function removeBreak(brId) {
+  if (!selected || selected.type !== 'staff') return;
+  const item = staff.find(s => s.id === selected.id);
+  if (!item) return;
+  item.breaks = (item.breaks || []).filter(b => b.id !== brId);
+  renderBreaksList(item);
+  renderRows();
+}
+
+function hideEditor() {
+  document.getElementById('editorEmpty').style.display = '';
+  document.getElementById('editorContent').style.display = 'none';
+}
+
+function closeEditor() {
+  selected = null;
+  hideEditor();
+  renderRows();
+}
+
+function saveEdit() {
+  if (!selected) return;
+  const name = document.getElementById('eName').value.trim();
+  const newS = parseTime(document.getElementById('eStart').value);
+  const newE = parseTime(document.getElementById('eEnd').value);
+  const sI = document.getElementById('eStart');
+  const eI = document.getElementById('eEnd');
+  sI.classList.remove('err'); eI.classList.remove('err');
+
+  if (isNaN(newS) || isNaN(newE) || newS >= newE || newS < S || newE > E) {
+    sI.classList.add('err'); eI.classList.add('err');
+    document.getElementById('errMsg').classList.add('show');
+    return;
+  }
+  document.getElementById('errMsg').classList.remove('show');
+
+  const list = selected.type === 'client' ? clients : staff;
+  const item = list.find(x => x.id === selected.id);
+  if (!item) return;
+
+  // Save breaks for staff
+  if (selected.type === 'staff') {
+    const rows = document.querySelectorAll('#breaksList .break-item');
+    const newBreaks = [];
+    let hasErr = false;
+
+    rows.forEach(row => {
+      const brId = parseInt(row.dataset.brid);
+      const bS = parseTime(row.querySelector('.br-start').value);
+      const bE = parseTime(row.querySelector('.br-end').value);
+
+      if (isNaN(bS) || isNaN(bE) || bS >= bE || bS < newS || bE > newE) {
+        hasErr = true; return;
+      }
+      const overlaps = newBreaks.some(b => bS < b.end && bE > b.start);
+      if (overlaps) { hasErr = true; return; }
+      newBreaks.push({id: brId, start: bS, end: bE});
+    });
+
+    if (hasErr) {
+      document.getElementById('breakErr').classList.add('show');
+      return;
+    }
+    document.getElementById('breakErr').classList.remove('show');
+    item.breaks = newBreaks;
+  }
+
+  item.name  = name || item.name;
+  item.start = newS;
+  item.end   = newE;
+  if (selected.type === 'client') item.service = document.getElementById('eExtra').value;
+  else item.pay = document.getElementById('eExtra').value;
+
+  document.getElementById('editorTitle').textContent = item.name;
+  renderRows();
+}
+
+function deleteSlot() {
+  if (!selected) return;
+  if (selected.type === 'client') clients = clients.filter(c => c.id !== selected.id);
+  else staff = staff.filter(s => s.id !== selected.id);
+  closeEditor();
+}
+
+function addClient() {
+  const id = nextC++;
+  clients.push({id, name:'New client', start:9, end:12, service:'Personal care'});
+  selected = {id, type:'client'};
+  renderRows(); openEditor();
+  document.getElementById('eName').focus();
+  document.getElementById('eName').select();
+}
+
+function addStaff() {
+  const id = nextS++;
+  staff.push({id, name:'New staff', start:9, end:12, pay:'Default paygroup', breaks:[]});
+  selected = {id, type:'staff'};
+  renderRows(); openEditor();
+  document.getElementById('eName').focus();
+  document.getElementById('eName').select();
+}
+
+function renderCoverage() {
+  const RES = SPAN * 4; // 15-min resolution
+  const cS = new Array(RES).fill(false);
+  const sS = new Array(RES).fill(false);
+
+  clients.forEach(c => {
+    for (let i = Math.round((c.start-S)*4); i < Math.round((c.end-S)*4); i++) cS[i] = true;
+  });
+
+  staff.forEach(s => {
+    for (let i = Math.round((s.start-S)*4); i < Math.round((s.end-S)*4); i++) {
+      const slotH = S + i/4;
+      const inBreak = (s.breaks||[]).some(br => slotH >= br.start && slotH < br.end);
+      if (!inBreak) sS[i] = true;
+    }
+  });
+
+  const total   = cS.filter(Boolean).length;
+  const covered = cS.filter((_,i) => _ && sS[i]).length;
+  const p = total ? Math.round(covered/total*100) : 100;
+
+  document.getElementById('covPct').textContent = p + '%';
+  const fill = document.getElementById('covFill');
+  fill.style.width = p + '%';
+  fill.style.background = p === 100 ? '#0ea882' : p >= 60 ? '#f59e0b' : '#ef4444';
+  const info = document.getElementById('covInfo');
+  if (p === 100) {
+    info.className = 'cov-info cov-ok';
+    info.textContent = '✓ All client time is covered';
+  } else {
+    info.className = 'cov-info cov-warn';
+    info.textContent = '⚠ Some client time has no staff assigned';
+  }
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.block') && !e.target.closest('.editor-panel') && !e.target.closest('.add-row')) {
+    if (selected) closeEditor();
+  }
+});
+
+init();
+renderRows();
+</script>
+</body>
+</html>
