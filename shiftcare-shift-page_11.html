@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ShiftCare — Create Shift</title>
+<link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* ── ShiftCare Design Tokens ── */
+  --sc-primary:            #1B2559;  /* primary-900 */
+  --sc-on-primary:         #FFFFFF;  /* white-50 */
+  --sc-primary-container:  #D6DCF5;  /* primary-100 */
+  --sc-on-primary-container: #1B2559; /* primary-900 */
+  --sc-secondary:          #4B5BB5;  /* primary-60 */
+  --sc-secondary-container: #EEF0FB; /* primary-50 */
+  --sc-on-secondary-container: #0D0F1A; /* neutral-900 */
+  --sc-background:         #F0F2FA;  /* shiftcare-blue-50 */
+  --sc-on-background:      #0D0F1A;  /* neutral-900 */
+  --sc-surface:            #FFFFFF;  /* white-50 */
+  --sc-surface-container:  #FFFFFF;  /* white-50 */
+  --sc-on-surface:         #0D0F1A;  /* neutral-900 */
+  --sc-on-surface-variant: #535780;  /* neutral-600 */
+  --sc-outline:            #6B7099;  /* neutral-500 */
+  --sc-outline-variant:    #C5C9E0;  /* neutral-300 */
+  --sc-error:              #C62828;  /* error-900 */
+  --sc-error-container:    #FEF0F0;  /* error-50 */
+  --sc-success:            #1B5E20;  /* success-900 */
+  --sc-success-container:  #E8F5E9;  /* success-50 */
+  --sc-warning:            #BF360C;  /* warning-900 */
+  --sc-warning-container:  #FFF8E1;  /* warning-50 */
+  --sc-scrim:              rgba(27, 37, 89, 0.20); /* shiftcare-blue-900 20% */
+
+  /* ── Semantic aliases (used throughout) ── */
+  --bg:           var(--sc-background);
+  --surface:      var(--sc-surface);
+  --surface-2:    var(--sc-secondary-container);
+  --border:       var(--sc-outline-variant);
+  --border-strong: var(--sc-outline);
+  --text-primary:   var(--sc-on-surface);
+  --text-secondary: var(--sc-on-surface-variant);
+  --text-tertiary:  #8C8FB8;        /* neutral-400 — between outline and on-surface-variant */
+  --blue:         var(--sc-secondary);
+  --blue-light:   var(--sc-secondary-container);
+  --green:        var(--sc-success);
+  --green-light:  var(--sc-success-container);
+  --red:          var(--sc-error);
+  --red-light:    var(--sc-error-container);
+  --orange:       var(--sc-warning);
+  --purple-50:    var(--sc-secondary-container);
+  --purple-200:   var(--sc-primary-container);
+  --purple-600:   var(--sc-secondary);
+  --purple-800:   var(--sc-primary);
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── Top bar ── */
+.topbar {
+  background: var(--surface);
+  border-bottom: 0.5px solid var(--border);
+  padding: 0 20px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+
+.close-btn {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 0.5px solid var(--border-strong);
+  background: var(--surface);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.close-btn:hover { background: var(--surface-2); }
+
+.template-bar {
+  background: var(--surface-2);
+  border-bottom: 0.5px solid var(--border);
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.template-select {
+  display: flex; align-items: center; gap: 8px;
+}
+
+.badge-pill {
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 0.5px solid var(--border-strong);
+  font-size: 11px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+}
+
+.btn-link {
+  background: none; border: none; cursor: pointer;
+  color: var(--sc-secondary); font-size: 12px; font-family: inherit;
+  display: flex; align-items: center; gap: 4px;
+}
+.btn-link:hover { text-decoration: underline; }
+
+/* ── Main layout ── */
+.page-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+  gap: 12px;
+  align-items: start;
+}
+
+/* ── Section card ── */
+.section-card {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.section-head {
+  padding: 10px 16px;
+  border-bottom: 0.5px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.section-head i { font-size: 15px; }
+
+.section-body { padding: 14px 16px; }
+
+/* ── Form elements ── */
+.field { margin-bottom: 10px; }
+.field:last-child { margin-bottom: 0; }
+
+.field-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-bottom: 3px;
+  display: flex; align-items: center; gap: 4px;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="time"],
+input[type="number"],
+select,
+textarea {
+  width: 100%;
+  padding: 7px 10px;
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+  appearance: none;
+}
+
+input:focus, select:focus, textarea:focus { border-color: var(--sc-secondary); }
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%239397a8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 24px;
+  cursor: pointer;
+}
+
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.row-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
+
+.form-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 0.5px solid var(--border);
+}
+.form-row:last-child { border-bottom: none; }
+.form-row-label { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; }
+.form-row-value { font-size: 12px; color: var(--text-primary); }
+
+/* ── Client tag ── */
+.client-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--sc-secondary-container);
+  color: var(--sc-secondary);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+.client-tag i { font-size: 13px; cursor: pointer; }
+
+.client-summary {
+  background: linear-gradient(180deg, #5175D1 0%, #242F65 100%);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  color: white;
+  margin-bottom: 10px;
+  display: flex; align-items: flex-start; gap: 10px;
+}
+
+.client-summary-icon {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+}
+
+.client-summary h4 { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+.client-summary p { font-size: 11px; opacity: 0.8; }
+
+.alert-row {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px;
+  color: var(--sc-error);
+  background: var(--sc-error-container);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  margin-bottom: 10px;
+}
+
+/* ── Days of week ── */
+.days-row { display: flex; gap: 6px; margin-top: 4px; }
+.day-chip {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 0.5px solid var(--border-strong);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 500; cursor: pointer;
+  color: var(--text-tertiary);
+  transition: all 0.12s;
+}
+.day-chip.active { background: var(--sc-secondary); color: white; border-color: var(--sc-secondary); }
+
+/* ── Toggle ── */
+.toggle {
+  width: 34px; height: 18px; border-radius: 9px;
+  background: var(--border-strong);
+  position: relative; cursor: pointer; flex-shrink: 0;
+  transition: background 0.2s;
+}
+.toggle.on { background: var(--sc-secondary); }
+.toggle::after {
+  content: ''; width: 12px; height: 12px; border-radius: 50%;
+  background: white; position: absolute; top: 3px; left: 3px;
+  transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.toggle.on::after { left: 19px; }
+
+/* ── Checkbox ── */
+.cb { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--border-strong); cursor: pointer; flex-shrink: 0; }
+.cb.checked { background: var(--sc-secondary); border-color: var(--sc-secondary); }
+
+/* ── Financial summary ── */
+.fin-summary-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  margin-bottom: 14px;
+}
+.fin-metric { text-align: center; }
+.fin-label { font-size: 10px; color: var(--text-tertiary); margin-bottom: 2px; }
+.fin-value { font-size: 18px; font-weight: 600; }
+.fin-value.cost { color: var(--sc-error); }
+.fin-value.revenue { color: var(--sc-success); }
+.fin-value.margin { color: var(--sc-success); }
+.fin-value.pct { color: var(--sc-success); }
+
+.info-banner {
+  background: var(--sc-secondary-container); border-radius: var(--radius-sm);
+  padding: 7px 10px; font-size: 11px; color: var(--sc-secondary);
+  display: flex; align-items: center; gap: 6px; margin-bottom: 12px;
+}
+
+.table-head { display: grid; gap: 4px; margin-bottom: 6px; }
+.table-row-fin {
+  display: grid; grid-template-columns: 3fr 1fr 1fr 1fr;
+  gap: 4px; padding: 5px 0;
+  border-bottom: 0.5px solid var(--border);
+  font-size: 11px;
+}
+.table-row-fin:last-child { border-bottom: none; font-weight: 600; }
+.col-head { font-size: 10px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.04em; }
+
+.section-sub-head {
+  font-size: 11px; font-weight: 600; color: var(--text-secondary);
+  margin: 12px 0 6px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+/* ══════════════════════════════
+   RIGHT COLUMN
+══════════════════════════════ */
+
+/* ── Choose carer ── */
+.carer-panel {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.carer-panel-head {
+  padding: 10px 14px;
+  border-bottom: 0.5px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.carer-panel-title {
+  font-size: 13px; font-weight: 500; color: var(--text-primary);
+  display: flex; align-items: center; gap: 7px;
+}
+.carer-panel-title i { font-size: 16px; color: var(--text-secondary); }
+
+.jb-counter {
+  display: flex; align-items: center; gap: 0;
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius-md); overflow: hidden;
+}
+.jb-counter button {
+  background: var(--surface-2); border: none; cursor: pointer;
+  width: 28px; height: 28px; font-size: 15px;
+  color: var(--text-secondary);
+  display: flex; align-items: center; justify-content: center;
+}
+.jb-counter button:hover { background: var(--border); }
+.jb-counter span {
+  padding: 0 10px; font-size: 12px; font-weight: 500;
+  color: var(--text-primary);
+  border-left: 0.5px solid var(--border); border-right: 0.5px solid var(--border);
+  height: 28px; display: flex; align-items: center;
+}
+.slot-summary { display: flex; align-items: center; gap: 6px; }
+.slot-summary-chip {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--sc-on-surface-variant);
+  background: var(--sc-secondary-container);
+  border: 0.5px solid var(--sc-outline-variant);
+  border-radius: 20px;
+  padding: 3px 10px;
+}
+.slot-summary-chip strong { color: var(--sc-primary); font-weight: 600; }
+.slot-summary-chip i { font-size: 12px; color: var(--sc-outline); }
+.slot-summary-chip.jb strong { color: var(--sc-secondary); }
+.slot-summary-chip.jb i { color: var(--sc-secondary); }
+
+.jb-counter-label {
+  font-size: 11px; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 6px;
+}
+
+.jb-counter-wrap {
+  display: flex; align-items: center; gap: 8px;
+}
+
+.btn-primary {
+  background: var(--sc-secondary); color: var(--sc-on-primary);
+  border: none; border-radius: var(--radius-md);
+  padding: 6px 12px; font-size: 12px; font-weight: 500;
+  cursor: pointer; display: flex; align-items: center; gap: 5px;
+  font-family: inherit; transition: background 0.15s;
+}
+.btn-primary:hover { background: var(--sc-primary); }
+
+.carer-panel-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+
+/* ── AI suggested strip ── */
+.ai-suggested {
+  font-size: 11px; color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+.ai-suggested span { font-weight: 500; color: var(--text-tertiary); }
+.ai-suggested a { color: var(--sc-secondary); text-decoration: none; font-weight: 500; }
+.ai-suggested a:hover { text-decoration: underline; }
+
+.search-wrap { position: relative; }
+.search-wrap input {
+  padding-left: 30px; width: 100%;
+}
+.search-wrap i {
+  position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+  font-size: 14px; color: var(--text-tertiary);
+}
+
+/* ── Slot card ── */
+.slot-card {
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.slot-card.ai-mode { border-color: var(--sc-primary-container); }
+
+.slot-head {
+  padding: 9px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 0.5px solid var(--border);
+  cursor: pointer; user-select: none;
+  transition: background 0.2s;
+}
+.slot-card.ai-mode .slot-head {
+  background: linear-gradient(180deg, #5175D1 0%, #242F65 100%);
+  border-bottom-color: rgba(255,255,255,0.15);
+}
+.slot-card.ai-mode .slot-body {
+  background: var(--sc-secondary-container);
+}
+.slot-card.ai-mode .slot-body .fl-label { color: var(--sc-on-surface-variant); }
+.slot-card.ai-mode .slot-body select,
+.slot-card.ai-mode .slot-body input[type="time"] {
+  background: var(--sc-surface); border-color: var(--sc-outline-variant); color: var(--sc-on-surface);
+}
+.slot-card.ai-mode .slot-body select option { background: var(--sc-surface); color: var(--sc-on-surface); }
+.slot-card.ai-mode .slot-body .inline-row { border-top-color: var(--sc-outline-variant); }
+.slot-card.ai-mode .slot-body .inline-label { color: var(--sc-on-primary-container); font-weight: 600; }
+.slot-card.ai-mode .slot-body .inline-sub { color: var(--sc-on-surface-variant); }
+.slot-card.ai-mode .slot-body .btn-ghost { border-color: var(--sc-outline-variant); color: var(--sc-secondary); background: var(--sc-surface); }
+.slot-card.ai-mode .slot-body .btn-ghost:hover { background: var(--sc-primary-container); }
+.slot-card.ai-mode .slot-body .micro-label { color: var(--sc-outline); letter-spacing: 0.07em; }
+.slot-card.ai-mode .slot-body .radio-pill { border-color: var(--sc-outline-variant); color: var(--sc-secondary); background: var(--sc-surface); }
+.slot-card.ai-mode .slot-body .radio-pill:hover { background: var(--sc-primary-container); border-color: var(--sc-secondary); color: var(--sc-primary); }
+.slot-card.ai-mode .slot-body .radio-pill.active { background: var(--sc-secondary); border-color: var(--sc-secondary); color: var(--sc-on-primary); font-weight: 600; }
+.slot-card.ai-mode .slot-body .radio-pill.active-neutral { background: var(--sc-surface-container); border-color: var(--sc-outline-variant); color: var(--sc-on-surface-variant); font-weight: 500; }
+.slot-card.ai-mode .slot-body .hint.ai { background: var(--sc-primary-container); color: var(--sc-on-primary-container); border-radius: var(--radius-sm); }
+.slot-card.ai-mode .slot-body .hint.neutral { background: var(--sc-outline-variant); color: var(--sc-on-surface-variant); border-radius: var(--radius-sm); }
+.slot-card.ai-mode .slot-body .jb-toggle { background: var(--sc-outline-variant); }
+.slot-card.ai-mode .slot-body .jb-toggle.on { background: var(--sc-secondary); }
+.slot-card.ai-mode .slot-body .assignment-row { border-top-color: var(--sc-outline-variant); }
+.slot-card.ai-mode .slot-body .criteria-card { border-color: var(--sc-outline-variant); overflow: hidden; border-radius: var(--radius-md); }
+.slot-card.ai-mode .slot-body .criteria-head { background: var(--sc-primary-container); color: var(--sc-on-primary-container); border-bottom-color: var(--sc-outline-variant); font-weight: 500; }
+.slot-card.ai-mode .slot-body .criteria-head i { color: var(--sc-outline); }
+.slot-card.ai-mode .slot-body .criteria-body { background: var(--sc-secondary-container); }
+.slot-card.ai-mode .slot-body .criteria-section-label { color: var(--sc-outline); }
+.slot-card.ai-mode .slot-body .pill { background: var(--sc-surface); border-color: var(--sc-outline-variant); color: var(--sc-secondary); }
+.slot-card.ai-mode .slot-body .pill:hover { background: var(--sc-primary-container); border-color: var(--sc-secondary); color: var(--sc-primary); }
+.slot-card.ai-mode .slot-body .pill.sel { background: var(--sc-secondary); border-color: var(--sc-secondary); color: var(--sc-on-primary); font-weight: 600; }
+
+.slot-head-left { display: flex; align-items: center; gap: 7px; }
+
+.slot-badge {
+  font-size: 10px; font-weight: 600;
+  padding: 2px 7px; border-radius: 4px;
+  display: flex; align-items: center; gap: 3px;
+}
+.badge-carer { background: var(--sc-secondary-container); color: var(--sc-on-surface-variant); border: 0.5px solid var(--sc-outline-variant); }
+.badge-jb { background: rgba(255,255,255,0.2); color: white; border: 0.5px solid rgba(255,255,255,0.35); }
+.badge-jb-manual { background: var(--sc-secondary-container); color: var(--sc-primary); border: 0.5px solid var(--sc-primary-container); }
+
+.slot-title { font-size: 12px; font-weight: 500; color: var(--text-primary); }
+.slot-card.ai-mode .slot-title { color: white; font-weight: 600; }
+
+/* manual job board head — plain white background */
+.slot-card:not(.ai-mode) .slot-head { background: var(--surface); }
+
+.slot-card.ai-mode .slot-head .icon-btn { color: rgba(255,255,255,0.7); }
+.slot-card.ai-mode .slot-head .icon-btn:hover { color: white; background: rgba(255,255,255,0.15); }
+
+.slot-head-right { display: flex; align-items: center; gap: 4px; }
+
+.icon-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-tertiary); padding: 2px;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; font-size: 15px;
+  transition: color 0.12s, background 0.12s;
+}
+.icon-btn:hover { color: var(--text-secondary); background: var(--surface-2); }
+.icon-btn.remove:hover { color: var(--sc-error); background: var(--sc-error-container); }
+
+.chevron { transition: transform 0.2s; }
+.slot-card.collapsed .chevron { transform: rotate(180deg); }
+.slot-card.collapsed .slot-body { display: none; }
+
+.slot-body { padding: 12px; }
+
+.field-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; margin-bottom: 8px; }
+
+.fl { display: flex; flex-direction: column; }
+.fl-label { font-size: 10px; color: var(--text-tertiary); margin-bottom: 3px; display: flex; align-items: center; gap: 3px; }
+.fl select, .fl input { font-size: 11px; padding: 6px 8px; }
+
+.inline-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 0; border-top: 0.5px solid var(--border);
+}
+.inline-label { font-size: 12px; font-weight: 500; color: var(--text-primary); }
+.inline-sub { font-size: 10px; color: var(--text-tertiary); margin-top: 1px; }
+
+.btn-ghost {
+  border: 0.5px solid var(--border-strong); background: transparent;
+  border-radius: var(--radius-md); padding: 4px 9px;
+  font-size: 11px; color: var(--text-secondary); cursor: pointer;
+  display: flex; align-items: center; gap: 3px;
+  transition: background 0.12s; white-space: nowrap; font-family: inherit;
+}
+.btn-ghost:hover { background: var(--surface-2); }
+
+/* job board toggle */
+.jb-toggle { width: 32px; height: 17px; border-radius: 9px; background: var(--border-strong); position: relative; cursor: pointer; flex-shrink: 0; transition: background 0.2s; }
+.jb-toggle.on { background: var(--sc-secondary); }
+.jb-toggle::after { content: ''; width: 11px; height: 11px; border-radius: 50%; background: white; position: absolute; top: 3px; left: 3px; transition: left 0.2s; }
+.jb-toggle.on::after { left: 18px; }
+
+.assignment-section { margin-top: 4px; }
+
+.assignment-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 0; border-top: 0.5px solid var(--border);
+}
+
+.micro-label {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text-tertiary);
+}
+
+.radio-pills { display: flex; gap: 5px; }
+.radio-pill {
+  padding: 5px 10px; border-radius: var(--radius-md);
+  border: 0.5px solid var(--border-strong);
+  font-size: 11px; color: var(--text-secondary); cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+  transition: all 0.12s; background: var(--surface); white-space: nowrap;
+}
+.radio-pill:hover { border-color: var(--purple-200); color: var(--purple-800); background: var(--purple-50); }
+.radio-pill.active { border-color: var(--purple-600); background: var(--purple-50); color: var(--purple-800); font-weight: 500; }
+.radio-pill.active-neutral { border-color: var(--border-strong); background: var(--surface-2); color: var(--text-primary); font-weight: 500; }
+
+.hint {
+  padding: 6px 9px; border-radius: var(--radius-sm);
+  font-size: 10px; line-height: 1.6;
+  display: flex; gap: 5px; margin-top: 4px;
+}
+.hint i { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+.hint.ai { background: var(--purple-50); color: var(--purple-800); }
+.hint.neutral { background: var(--surface-2); color: var(--text-secondary); }
+
+/* criteria nested */
+.criteria-card { border: 0.5px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-top: 8px; }
+.criteria-head {
+  padding: 7px 10px; font-size: 11px; font-weight: 500;
+  color: var(--text-primary); border-bottom: 0.5px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  cursor: pointer; user-select: none; background: var(--surface-2);
+}
+.criteria-body { padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+.criteria-card.collapsed .criteria-body { display: none; }
+
+.criteria-section-label {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.07em; color: var(--text-tertiary); margin-bottom: 5px;
+}
+
+.pill-grid { display: flex; flex-wrap: wrap; gap: 4px; }
+.pill {
+  padding: 3px 9px; border-radius: 20px;
+  border: 0.5px solid var(--border-strong);
+  font-size: 10px; color: var(--text-secondary);
+  cursor: pointer; background: var(--surface); transition: all 0.1s;
+}
+.pill:hover { border-color: var(--purple-600); color: var(--purple-600); }
+.pill.sel { background: var(--purple-50); border-color: var(--purple-600); color: var(--purple-800); font-weight: 500; }
+
+/* add slots */
+.add-slots-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; padding: 12px 14px; border-bottom: 0.5px solid var(--sc-outline-variant); }
+.add-slot-btn {
+  padding: 9px 10px;
+  border-radius: var(--radius-md);
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: all 0.15s; font-family: inherit;
+  border: none;
+}
+.add-slot-btn.carer-btn {
+  background: var(--sc-secondary-container);
+  color: var(--sc-primary);
+  border: 1px solid var(--sc-primary-container);
+}
+.add-slot-btn.carer-btn:hover { background: var(--sc-primary-container); border-color: var(--sc-secondary); }
+
+.add-slot-btn.jb-btn {
+  background: var(--sc-secondary-container);
+  color: var(--sc-secondary);
+  border: 1px solid var(--sc-primary-container);
+}
+.add-slot-btn.jb-btn:hover { background: var(--sc-primary-container); border-color: var(--sc-secondary); }
+
+/* notify row */
+.notify-row {
+  padding: 8px 14px; border-top: 0.5px solid var(--border);
+  display: flex; align-items: center; justify-content: flex-end; gap: 7px;
+  font-size: 12px; color: var(--text-secondary);
+}
+.notify-cb {
+  width: 15px; height: 15px; border-radius: 3px;
+  background: var(--sc-secondary); border: 0.5px solid var(--sc-secondary);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.notify-cb i { font-size: 10px; color: white; }
+
+/* ── Invoice settings ── */
+.invoice-card {
+  background: var(--surface); border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 12px;
+}
+.invoice-head {
+  padding: 10px 14px; border-bottom: 0.5px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.invoice-head-title {
+  font-size: 12px; font-weight: 600; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 0.04em;
+  display: flex; align-items: center; gap: 6px;
+}
+
+.carer-invoice-block { padding: 10px 14px; border-bottom: 0.5px solid var(--border); }
+.carer-invoice-block:last-child { border-bottom: none; }
+
+.carer-invoice-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.carer-invoice-name { font-size: 12px; font-weight: 500; }
+.invoice-on-badge {
+  font-size: 10px; font-weight: 500; color: var(--sc-success);
+  display: flex; align-items: center; gap: 3px;
+}
+.invoice-detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;
+}
+.inv-row { font-size: 10px; color: var(--text-tertiary); }
+.inv-row span { color: var(--text-secondary); }
+
+/* ── Forms, tasks ── */
+.forms-table { width: 100%; border-collapse: collapse; }
+.forms-table th {
+  text-align: left; font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--text-tertiary); padding: 6px 0; border-bottom: 0.5px solid var(--border);
+}
+.forms-table td {
+  padding: 7px 0; font-size: 11px; border-bottom: 0.5px solid var(--border);
+  color: var(--text-primary); vertical-align: middle;
+}
+.forms-table tr:last-child td { border-bottom: none; }
+
+.action-link { color: var(--sc-secondary); text-decoration: none; font-size: 11px; margin-right: 8px; }
+.action-link:hover { text-decoration: underline; }
+.action-link.danger { color: var(--sc-error); }
+
+.task-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 0; border-bottom: 0.5px solid var(--border); gap: 8px;
+}
+.task-row:last-of-type { border-bottom: none; }
+.task-placeholder { font-size: 11px; color: var(--text-tertiary); flex: 1; }
+.task-mandatory { font-size: 10px; color: var(--text-tertiary); white-space: nowrap; }
+.task-mandatory.yes { color: var(--sc-error); }
+
+/* ── Mileage ── */
+.mileage-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 0; border-bottom: 0.5px solid var(--border); font-size: 12px;
+}
+.mileage-row:last-child { border-bottom: none; }
+.ml { color: var(--text-secondary); }
+.mr-val { color: var(--text-primary); font-weight: 500; }
+
+/* ── Rich text toolbar ── */
+.richtext-toolbar {
+  display: flex; gap: 4px; padding: 7px 10px;
+  border-bottom: 0.5px solid var(--border);
+  background: var(--surface-2);
+}
+.rt-btn {
+  width: 24px; height: 24px; border: none; background: transparent;
+  border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;
+  color: var(--text-secondary); display: flex; align-items: center; justify-content: center;
+}
+.rt-btn:hover { background: var(--border); }
+.richtext-area { min-height: 60px; padding: 10px; font-size: 12px; color: var(--text-tertiary); }
+
+/* ── Shift type radio ── */
+.shift-type-radio { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.radio-dot-sm {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.radio-dot-sm.active { border-color: var(--sc-secondary); background: var(--sc-secondary); }
+.radio-dot-sm.active::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: white; }
+
+/* ── Save bar ── */
+.save-btn {
+  background: var(--sc-primary); color: var(--sc-on-primary); border: none;
+  border-radius: var(--radius-md); padding: 7px 16px;
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; font-family: inherit;
+}
+.save-btn:hover { background: #131c44; }
+
+/* empty state */
+.empty-slots {
+  text-align: center; padding: 20px 12px;
+  color: var(--text-tertiary); font-size: 12px;
+  border: 1px dashed var(--border); border-radius: var(--radius-md);
+}
+.empty-slots i { font-size: 24px; display: block; margin-bottom: 6px; }
+
+.ai-suggested-row {
+  font-size: 11px; margin-bottom: 4px;
+}
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="close-btn"><i class="ti ti-x" aria-hidden="true"></i></button>
+  </div>
+  <button class="save-btn">
+    Save and Publish <i class="ti ti-send" aria-hidden="true"></i>
+  </button>
+</div>
+
+<!-- Template bar -->
+<div class="template-bar">
+  <div class="template-select">
+    <span class="badge-pill"><i class="ti ti-layout-2" aria-hidden="true"></i> Shift Template <i class="ti ti-info-circle" style="font-size:11px;"></i></span>
+    <span style="font-size:12px; color:var(--text-tertiary); margin-left:6px;">Select a template to apply to this shift</span>
+  </div>
+  <button class="btn-link"><i class="ti ti-plus" aria-hidden="true"></i> Create new template</button>
+</div>
+
+<!-- Page body: two columns -->
+<div class="page-body">
+
+  <!-- ══ LEFT COLUMN ══ -->
+  <div class="left-col">
+
+    <!-- Client -->
+    <div class="section-card">
+      <div class="section-head"><i class="ti ti-user" aria-hidden="true"></i> Client</div>
+      <div class="section-body">
+        <div style="margin-bottom:10px;">
+          <div class="client-tag">Gertrude Rosenbelle <i class="ti ti-x" aria-hidden="true"></i></div>
+        </div>
+        <div style="font-size:12px; font-weight:500; margin-bottom:8px;">Gertrude Rosenbelle</div>
+        <div class="client-summary">
+          <div class="client-summary-icon"><i class="ti ti-sparkles" aria-hidden="true"></i></div>
+          <div>
+            <h4>Amanda Hudgkins - AI Client Summary</h4>
+            <p>Date range: 13 Apr 2026 - 20 Apr 2026</p>
+            <p>Generated 7 days ago</p>
+          </div>
+        </div>
+        <div class="alert-row">
+          <i class="ti ti-alert-circle" aria-hidden="true"></i>
+          Client has blacklisted carer Viscount Villanueva
+        </div>
+        <div class="row-3" style="margin-bottom:8px;">
+          <input type="time" value="09:00" />
+          <input type="time" value="10:00" />
+          <select><option>Select</option></select>
+        </div>
+        <div class="row-2" style="margin-bottom:8px;">
+          <select><option>1:1</option><option>1:2</option></select>
+          <select><option>Fund A</option><option>Fund B</option></select>
+        </div>
+        <div style="display:flex; justify-content:flex-end;">
+          <button class="btn-ghost"><i class="ti ti-scissors" aria-hidden="true"></i> Split</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Time & Location -->
+    <div class="section-card">
+      <div class="section-head"><i class="ti ti-calendar" aria-hidden="true"></i> Time &amp; Location</div>
+      <div class="section-body">
+        <div class="form-row">
+          <span class="form-row-label">Account Location</span>
+          <select style="width:160px;"><option>Default</option></select>
+        </div>
+        <div class="form-row">
+          <span class="form-row-label">Facility</span>
+          <select style="width:160px;"><option>Select</option></select>
+        </div>
+        <div class="form-row">
+          <span class="form-row-label">Date</span>
+          <input type="date" value="2025-06-04" style="width:160px;" />
+        </div>
+        <div class="form-row" style="padding:6px 0; border-bottom: 0.5px solid var(--border);">
+          <span></span>
+          <span style="font-size:11px; color:var(--text-tertiary); font-style:italic;">Shift finishes the next day</span>
+        </div>
+        <div class="form-row">
+          <span class="form-row-label">Time</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <input type="time" value="00:00" style="width:90px;" />
+            <span style="color:var(--text-tertiary);">–</span>
+            <input type="time" value="00:00" style="width:90px;" />
+          </div>
+        </div>
+        <div class="form-row">
+          <span class="form-row-label">Repeat</span>
+          <input type="checkbox" class="cb checked" />
+        </div>
+        <div class="form-row">
+          <span class="form-row-label">Recurrence</span>
+          <select style="width:160px;"><option>Weekly</option><option>Daily</option><option>Monthly</option></select>
+        </div>
+        <div class="form-row">
+          <span class="form-row-label">Repeat every</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <input type="number" value="1" style="width:50px;" />
+            <select style="width:80px;"><option>Week</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <span class="form-row-label">Occurs on</span>
+          <div class="days-row">
+            <div class="day-chip">Sun</div>
+            <div class="day-chip active">Mon</div>
+            <div class="day-chip">Tue</div>
+            <div class="day-chip">Wed</div>
+            <div class="day-chip">Thu</div>
+            <div class="day-chip">Fri</div>
+            <div class="day-chip">Sat</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <span class="form-row-label">End date</span>
+          <input type="date" value="2025-06-04" style="width:160px;" />
+        </div>
+        <div style="font-size:10px; color:var(--text-tertiary); text-align:right; padding:4px 0 8px;">
+          Every 1 week until June 20, 2025, 1 occurrence
+        </div>
+        <div class="form-row">
+          <span class="form-row-label">Address</span>
+          <input type="text" placeholder="Enter address" style="width:200px;" />
+        </div>
+        <div style="display:flex; justify-content:flex-end; margin-top:2px; margin-bottom:6px;">
+          <span style="font-size:10px; color:var(--orange); display:flex; align-items:center; gap:3px;">
+            <i class="ti ti-alert-triangle" aria-hidden="true"></i> Invalid address, <a href="#" class="action-link" style="font-size:10px;">read more</a>
+          </span>
+        </div>
+        <div class="form-row">
+          <span class="form-row-label">Unit/Apartment Number</span>
+          <input type="text" placeholder="Enter unit/apartment" style="width:200px;" />
+        </div>
+        <div style="display:flex; align-items:center; justify-content:flex-end; gap:6px; padding:6px 0; font-size:11px; color:var(--text-secondary);">
+          <i class="ti ti-map-pin-off" aria-hidden="true" style="font-size:13px;"></i> Drop off address
+        </div>
+        <div class="form-row">
+          <span class="form-row-label">Shift Bonus <i class="ti ti-info-circle" style="font-size:11px;"></i></span>
+          <div class="toggle" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shift -->
+    <div class="section-card">
+      <div class="section-head"><i class="ti ti-user-check" aria-hidden="true"></i> Shift</div>
+      <div class="section-body">
+        <div class="form-row">
+          <span class="form-row-label">Shift type</span>
+          <div class="shift-type-radio">
+            <div class="radio-dot-sm active"></div>
+            <select style="width:160px;"><option>Personal Care</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <span class="form-row-label">Additional Shift types</span>
+          <select style="width:160px;"><option>Select</option></select>
+        </div>
+        <div class="form-row">
+          <span class="form-row-label">Allowance</span>
+          <select style="width:160px;"><option>Select</option></select>
+        </div>
+        <div class="form-row">
+          <span class="form-row-label">Additional cost ($)</span>
+          <input type="number" placeholder="0" style="width:80px;" />
+        </div>
+        <div class="form-row">
+          <span class="form-row-label">Ignore staff count</span>
+          <div class="toggle" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="form-row">
+          <span class="form-row-label">Confirmation required</span>
+          <div class="toggle" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="form-row">
+          <span class="form-row-label">Customer Editable</span>
+          <div class="toggle" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="form-row" style="border-bottom:none;">
+          <span class="form-row-label">Decline accepted shift <i class="ti ti-info-circle" style="font-size:11px;"></i></span>
+          <div class="toggle" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Financial Summary -->
+    <div class="section-card">
+      <div class="section-head"><i class="ti ti-chart-bar" aria-hidden="true"></i> Financial Summary</div>
+      <div class="section-body">
+        <div class="info-banner">
+          <i class="ti ti-info-circle" aria-hidden="true"></i>
+          Financials are estimated. Only finalised once the shift has been completed
+        </div>
+        <div class="fin-summary-grid">
+          <div class="fin-metric">
+            <div class="fin-label">Cost</div>
+            <div class="fin-value cost">$84.90</div>
+          </div>
+          <div class="fin-metric">
+            <div class="fin-label">Revenue</div>
+            <div class="fin-value revenue">$120.90</div>
+          </div>
+          <div class="fin-metric">
+            <div class="fin-label">Margin</div>
+            <div class="fin-value margin">$35.10</div>
+          </div>
+          <div class="fin-metric">
+            <div class="fin-label">Margin %</div>
+            <div class="fin-value pct">29.3%</div>
+          </div>
+        </div>
+
+        <div class="section-sub-head">
+          Cost Breakdown
+          <i class="ti ti-chevron-up" aria-hidden="true" style="font-size:14px; color:var(--text-tertiary);"></i>
+        </div>
+        <div>
+          <div class="table-row-fin" style="border-bottom: 0.5px solid var(--border); padding-bottom:4px; margin-bottom:2px;">
+            <span class="col-head">Pay Category</span>
+            <span class="col-head">Units</span>
+            <span class="col-head">Rate</span>
+            <span class="col-head">Cost</span>
+          </div>
+          <div class="table-row-fin"><span>Casual Ordinary Hours - MA000100</span><span>7</span><span>$11.97</span><span>$80.79</span></div>
+          <div class="table-row-fin"><span>Board and Lodging Award</span><span>1</span><span>$1.00</span><span>$1.00</span></div>
+          <div class="table-row-fin"><span>Laundry Allowance - up to ATO threshold</span><span>1</span><span>$0.32</span><span>$0.32</span></div>
+          <div class="table-row-fin"><span>First Aid Allowance - hourly</span><span>1</span><span>$0.54</span><span>$0.54</span></div>
+          <div class="table-row-fin"><span>Additional cost</span><span>1</span><span>$1.00</span><span>$1.00</span></div>
+          <div class="table-row-fin" style="border-top: 0.5px solid var(--border); margin-top:2px;"><span style="color:var(--blue); font-weight:600;">Total</span><span></span><span></span><span style="color:var(--blue);">$84.65</span></div>
+        </div>
+
+        <div class="section-sub-head" style="margin-top:14px;">
+          Revenue Breakdown
+          <i class="ti ti-chevron-up" aria-hidden="true" style="font-size:14px; color:var(--text-tertiary);"></i>
+        </div>
+        <div>
+          <div class="table-row-fin" style="grid-template-columns: 3fr 1fr 1fr 1fr; border-bottom: 0.5px solid var(--border); padding-bottom:4px; margin-bottom:2px;">
+            <span class="col-head">Pricebook / Item</span>
+            <span class="col-head">Units</span>
+            <span class="col-head">Rate</span>
+            <span class="col-head">Revenue</span>
+          </div>
+          <div class="table-row-fin"><span style="color:var(--text-tertiary);">&lt;Pricebook&gt;</span><span>0</span><span>$00.00</span><span>$00.00</span></div>
+          <div class="table-row-fin"><span>Amanda - Assessment Recommendation Therapy or Training EC Dietitian - Weekday</span><span>8</span><span>$7.50</span><span>$60.00</span></div>
+          <div class="table-row-fin"><span>Brendon - Assessment Recommendation Therapy or Training EC Dietitian - Weekday</span><span>8</span><span>$7.50</span><span>$60.00</span></div>
+          <div class="table-row-fin" style="border-top: 0.5px solid var(--border); margin-top:2px;"><span style="color:var(--blue); font-weight:600;">Total</span><span></span><span></span><span style="color:var(--blue);">$84.65</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ RIGHT COLUMN ══ -->
+  <div class="right-col">
+
+    <!-- Choose carer panel -->
+    <div class="carer-panel">
+      <div class="carer-panel-head">
+        <div class="carer-panel-title">
+          <i class="ti ti-users" aria-hidden="true"></i>
+          Choose carer
+        </div>
+        <div class="slot-summary">
+          <span class="slot-summary-chip"><i class="ti ti-user" aria-hidden="true"></i> Carer: <strong id="summary-carer">0</strong></span>
+          <span class="slot-summary-chip jb"><i class="ti ti-sparkles" aria-hidden="true"></i> Job board: <strong id="summary-jb">0</strong></span>
+        </div>
+      </div>
+
+      <div class="add-slots-row">
+        <button class="add-slot-btn carer-btn" onclick="addSlot('carer')">
+          <i class="ti ti-user-plus" aria-hidden="true"></i> Add carer slot
+        </button>
+        <button class="add-slot-btn jb-btn" onclick="addSlot('jobboard')">
+          <i class="ti ti-sparkles" aria-hidden="true"></i> Add job board slot
+        </button>
+      </div>
+
+      <div class="carer-panel-body" id="slot-list">
+        <div class="empty-slots" id="empty-state" style="display:none;">
+          <i class="ti ti-user-plus" aria-hidden="true"></i>
+          No slots added yet.
+        </div>
+      </div>
+
+      <div class="notify-row">
+        <span>Notify Carer</span>
+        <div class="notify-cb" onclick="this.classList.toggle('unchecked')">
+          <i class="ti ti-check" aria-hidden="true"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invoice Settings -->
+    <div class="invoice-card">
+      <div class="invoice-head">
+        <div class="invoice-head-title"><i class="ti ti-file-invoice" aria-hidden="true"></i> Invoice Settings</div>
+        <button class="btn-ghost"><i class="ti ti-layout-list" aria-hidden="true"></i> Bulk assign</button>
+      </div>
+      <div class="carer-invoice-block">
+        <div class="carer-invoice-head">
+          <span class="carer-invoice-name">Carer A</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="invoice-on-badge"><i class="ti ti-circle-check" aria-hidden="true" style="font-size:12px;"></i> Invoice Mileage: On</span>
+            <button class="btn-ghost" style="padding:3px 8px; font-size:11px;"><i class="ti ti-pencil" aria-hidden="true"></i> Expand</button>
+          </div>
+        </div>
+        <div class="invoice-detail-grid">
+          <div class="inv-row">Travel mileage: <span>–</span></div>
+          <div class="inv-row">Pricebook: <span>–</span></div>
+          <div class="inv-row">Ratio: <span>1:1 (default)</span></div>
+          <div class="inv-row">Transport mileage: <span>–</span></div>
+          <div class="inv-row">Pricebook: <span>–</span></div>
+          <div class="inv-row">Ratio: <span>1:1 (default)</span></div>
+          <div class="inv-row">Travel Time: <span>–</span></div>
+          <div class="inv-row">Pricebook: <span>–</span></div>
+          <div class="inv-row">Ratio: <span>1:1 (default)</span></div>
+        </div>
+      </div>
+      <div class="carer-invoice-block">
+        <div class="carer-invoice-head">
+          <span class="carer-invoice-name">Carer B</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="invoice-on-badge"><i class="ti ti-circle-check" aria-hidden="true" style="font-size:12px;"></i> Invoice Mileage: On</span>
+            <button class="btn-ghost" style="padding:3px 8px; font-size:11px;"><i class="ti ti-pencil" aria-hidden="true"></i> Expand</button>
+          </div>
+        </div>
+        <div class="invoice-detail-grid">
+          <div class="inv-row">Travel mileage: <span>–</span></div>
+          <div class="inv-row">Pricebook: <span>–</span></div>
+          <div class="inv-row">Ratio: <span>1:1 (default)</span></div>
+          <div class="inv-row">Transport mileage: <span>–</span></div>
+          <div class="inv-row">Pricebook: <span>–</span></div>
+          <div class="inv-row">Ratio: <span>1:1 (default)</span></div>
+          <div class="inv-row">Travel Time: <span>–</span></div>
+          <div class="inv-row">Pricebook: <span>–</span></div>
+          <div class="inv-row">Ratio: <span>1:1 (default)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shift Related Forms -->
+    <div class="section-card">
+      <div class="section-head"><i class="ti ti-forms" aria-hidden="true"></i> Shift Related Forms</div>
+      <div class="section-body">
+        <div style="font-size:11px; font-weight:500; margin-bottom:6px;">Linda Client</div>
+        <table class="forms-table">
+          <thead>
+            <tr><th>Form Name</th><th>Mandatory</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Form 1</td>
+              <td>Yes</td>
+              <td><a href="#" class="action-link">View</a><a href="#" class="action-link danger">Remove</a></td>
+            </tr>
+            <tr>
+              <td colspan="3">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <select style="flex:1;"><option>Select form</option></select>
+                  <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:var(--text-secondary); white-space:nowrap;">
+                    <input type="checkbox" /> Mandatory
+                  </label>
+                  <button class="btn-primary" style="padding:5px 10px; font-size:11px;"><i class="ti ti-plus" aria-hidden="true"></i> Form</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tasks -->
+    <div class="section-card">
+      <div class="section-head"><i class="ti ti-list-check" aria-hidden="true"></i> Tasks</div>
+      <div class="section-body">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+          <input type="text" placeholder="Task Description" style="flex:1;" />
+          <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:var(--text-secondary); white-space:nowrap;">
+            <input type="checkbox" /> Mandatory
+          </label>
+          <button class="btn-primary" style="padding:5px 10px; font-size:11px;"><i class="ti ti-plus" aria-hidden="true"></i> Task</button>
+        </div>
+        <div class="task-row">
+          <div style="display:flex; align-items:center; gap:6px; flex:1;">
+            <i class="ti ti-grip-vertical" aria-hidden="true" style="color:var(--text-tertiary); font-size:14px;"></i>
+            <span class="task-placeholder">&lt;Task Description&gt;</span>
+          </div>
+          <span class="task-mandatory">Mandatory: No</span>
+          <button class="icon-btn remove"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+        <div class="task-row">
+          <div style="display:flex; align-items:center; gap:6px; flex:1;">
+            <i class="ti ti-grip-vertical" aria-hidden="true" style="color:var(--text-tertiary); font-size:14px;"></i>
+            <span class="task-placeholder">&lt;Task Description&gt;</span>
+          </div>
+          <span class="task-mandatory yes">Mandatory: Yes</span>
+          <button class="icon-btn remove"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="section-card">
+      <div class="section-head"><i class="ti ti-file-text" aria-hidden="true"></i> Instructions</div>
+      <div class="richtext-toolbar">
+        <button class="rt-btn" style="font-weight:700;">B</button>
+        <button class="rt-btn" style="font-size:10px;">H1</button>
+        <button class="rt-btn" style="font-size:10px;">H2</button>
+        <button class="rt-btn" style="font-size:10px;">H3</button>
+        <button class="rt-btn" style="font-style:italic;">I</button>
+        <button class="rt-btn"><i class="ti ti-list" aria-hidden="true"></i></button>
+        <button class="rt-btn"><i class="ti ti-underline" aria-hidden="true"></i></button>
+        <button class="rt-btn"><i class="ti ti-arrow-back-up" aria-hidden="true"></i></button>
+      </div>
+      <div class="richtext-area">Enter instructions here…</div>
+    </div>
+
+    <!-- Mileage -->
+    <div class="section-card">
+      <div class="section-head"><i class="ti ti-road" aria-hidden="true"></i> Mileage</div>
+      <div class="section-body">
+        <div class="mileage-row">
+          <span class="ml">Mileage cap <i class="ti ti-info-circle" style="font-size:11px;"></i></span>
+          <span class="mr-val">Km: 24</span>
+        </div>
+        <div class="mileage-row">
+          <span class="ml">Mileage <i class="ti ti-info-circle" style="font-size:11px;"></i></span>
+          <span class="mr-val">Km: 0</span>
+        </div>
+        <div class="mileage-row">
+          <span class="ml">Invoicing</span>
+          <span style="font-size:11px; color:var(--text-tertiary);">&lt;client&gt; will be invoiced for mileage</span>
+        </div>
+        <div class="mileage-row" style="border-bottom:none;">
+          <span class="ml">Company vehicle <i class="ti ti-info-circle" style="font-size:11px;"></i></span>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div style="margin-top:8px; padding:6px 10px; background:var(--sc-warning-container); border-radius:var(--radius-sm); font-size:10px; color:var(--sc-warning); display:flex; align-items:center; gap:5px;">
+          <i class="ti ti-info-circle" aria-hidden="true"></i> Only available on 1:1 shifts.
+        </div>
+      </div>
+    </div>
+
+    <!-- Signature on clock out -->
+    <div class="section-card">
+      <div class="section-head"><i class="ti ti-signature" aria-hidden="true"></i> Signature on clock out</div>
+      <div class="section-body">
+        <div class="form-row">
+          <span class="form-row-label">Require client signature on clock out</span>
+          <div class="toggle" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="form-row" style="border-bottom:none;">
+          <span class="form-row-label">Require carer signature on clock out</span>
+          <div class="toggle" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let slotCount = { carer: 0, jobboard: 0 };
+
+
+  function updateSummary() {
+    const list = document.getElementById('slot-list');
+    const carerCount = list.querySelectorAll('.slot-card[id^="slot-carer"]').length;
+    const jbCount = list.querySelectorAll('.slot-card[id^="slot-jobboard"]').length;
+    document.getElementById('summary-carer').textContent = carerCount;
+    document.getElementById('summary-jb').textContent = jbCount;
+  }
+
+  function updateEmptyState() {
+    const list = document.getElementById('slot-list');
+    const empty = document.getElementById('empty-state');
+    const hasSlots = list.querySelectorAll('.slot-card').length > 0;
+    empty.style.display = hasSlots ? 'none' : 'block';
+  }
+
+  function addSlot(type) {
+    slotCount[type]++;
+    const idx = slotCount[type];
+    const id = type + '-' + idx;
+    const list = document.getElementById('slot-list');
+    const el = document.createElement('div');
+    el.className = 'slot-card' + (type === 'jobboard' ? ' ai-mode' : '');
+    if (type === 'jobboard') el.dataset.jbNum = idx;
+    el.id = 'slot-' + id;
+    el.innerHTML = type === 'carer' ? carerHTML(id, idx) : jobboardHTML(id, idx);
+    list.appendChild(el);
+    updateEmptyState();
+    updateSummary();
+    relabelSlots();
+  }
+
+  function removeSlot(id) {
+    const el = document.getElementById('slot-' + id);
+    if (el) el.remove();
+    updateEmptyState();
+    updateSummary();
+    relabelSlots();
+  }
+
+  function relabelSlots() {
+    const list = document.getElementById('slot-list');
+    // Relabel job board slots
+    const jbSlots = list.querySelectorAll('.slot-card[id^="slot-jobboard-"]');
+    jbSlots.forEach((card, i) => {
+      const slotId = card.id.replace('slot-', '');
+      const titleEl = document.getElementById('title-' + slotId);
+      if (titleEl) {
+        // Only update if in manual mode (ai-mode cards show "AI Auto Rostering")
+        if (!card.classList.contains('ai-mode')) {
+          titleEl.textContent = 'Job board ' + (i + 1);
+        }
+        // Store the human number on the card for setJbMode to use
+        card.dataset.jbNum = i + 1;
+      }
+    });
+    // Relabel carer slots
+    const carerSlots = list.querySelectorAll('.slot-card[id^="slot-carer-"]');
+    carerSlots.forEach((card, i) => {
+      const titleEl = card.querySelector('.slot-title');
+      if (titleEl) titleEl.textContent = 'Slot ' + (i + 1);
+    });
+  }
+
+  function toggleCollapse(id) {
+    document.getElementById('slot-' + id).classList.toggle('collapsed');
+  }
+
+  function toggleJbToggle(el) { el.classList.toggle('on'); }
+
+  function toggleCriteria(id) {
+    const c = document.getElementById('criteria-' + id);
+    c.classList.toggle('collapsed');
+    const ch = c.querySelector('.crit-chev');
+    ch.style.transform = c.classList.contains('collapsed') ? 'rotate(180deg)' : '';
+  }
+
+  function selectPill(el, groupId) {
+    document.getElementById(groupId).querySelectorAll('.pill').forEach(p => p.classList.remove('sel'));
+    el.classList.add('sel');
+  }
+
+  function setJbMode(id, mode) {
+    const card = document.getElementById('slot-' + id);
+    const titleEl = document.getElementById('title-' + id);
+    const badgeEl = document.getElementById('badge-' + id);
+    const hintEl = document.getElementById('hint-' + id);
+    const pillAuto = document.getElementById('pill-auto-' + id);
+    const pillManual = document.getElementById('pill-manual-' + id);
+    const isAI = mode === 'auto';
+    const card2 = document.getElementById('slot-' + id); const num = card2 && card2.dataset.jbNum ? card2.dataset.jbNum : id.split('-')[1];
+
+    card.classList.toggle('ai-mode', isAI);
+    titleEl.textContent = isAI ? 'AI Auto Rostering' : 'Job board ' + num;
+    badgeEl.className = isAI ? 'slot-badge badge-jb' : 'slot-badge badge-jb-manual';
+    badgeEl.innerHTML = isAI
+      ? '<i class="ti ti-sparkles" aria-hidden="true" style="font-size:10px;"></i> Job board'
+      : '<i class="ti ti-layout-board" aria-hidden="true" style="font-size:10px;"></i> Job board';
+    hintEl.className = isAI ? 'hint ai' : 'hint neutral';
+    hintEl.querySelector('span').textContent = isAI
+      ? 'AI auto rostering is active — carers are matched and assigned automatically.'
+      : 'Coordinator will review and confirm before a carer is assigned.';
+    pillAuto.className = isAI ? 'radio-pill active' : 'radio-pill';
+    pillManual.className = isAI ? 'radio-pill' : 'radio-pill active-neutral';
+  }
+
+  function carerHTML(id, idx) {
+    return `
+      <div class="slot-head" onclick="toggleCollapse('${id}')">
+        <div class="slot-head-left">
+          <span class="slot-badge badge-carer"><i class="ti ti-user" style="font-size:10px;"></i> Carer</span>
+          <span class="slot-title">Slot ${idx}</span>
+        </div>
+        <div class="slot-head-right" onclick="event.stopPropagation()">
+          <button class="icon-btn" onclick="toggleCollapse('${id}')"><i class="ti ti-chevron-up chevron"></i></button>
+          <button class="icon-btn remove" onclick="removeSlot('${id}')"><i class="ti ti-x"></i></button>
+        </div>
+      </div>
+      <div class="slot-body">
+        <div class="ai-suggested-row">
+          <span style="color:var(--text-tertiary); font-size:11px;">AI Suggested Carer</span><br>
+          <a href="#" style="color:var(--blue); font-size:11px; font-weight:500;">Abner Chua (16/30hrs)</a>
+          <a href="#" style="color:var(--blue); font-size:11px; font-weight:500; margin-left:8px;">Pei Shan (18/30hrs)</a>
+        </div>
+        <div class="search-wrap" style="margin-bottom:8px;">
+          <i class="ti ti-search"></i>
+          <input type="text" placeholder="Search Carer" />
+        </div>
+        <div class="field-grid-3">
+          <div class="fl"><div class="fl-label">Start time</div><input type="time" value="09:00" /></div>
+          <div class="fl"><div class="fl-label">End time</div><input type="time" value="11:00" /></div>
+          <div class="fl"><div class="fl-label">Pay rate</div><select><option>Staff default</option></select></div>
+        </div>
+        <div class="field-grid-3">
+          <div class="fl"><div class="fl-label">Travel mileage <i class="ti ti-info-circle" style="font-size:10px;"></i></div><select><option>Default</option></select></div>
+          <div class="fl"><div class="fl-label">Vehicle used <i class="ti ti-info-circle" style="font-size:10px;"></i></div><select><option>Not set</option></select></div>
+          <div class="fl"><div class="fl-label">Entry method <i class="ti ti-info-circle" style="font-size:10px;"></i></div><select><option>GPS only</option></select></div>
+        </div>
+        <div class="inline-row">
+          <span class="inline-label">Break Time</span>
+          <button class="btn-ghost"><i class="ti ti-plus"></i> Add Break Time</button>
+        </div>
+        <div class="inline-row">
+          <span class="inline-label">Awake Time Tracking</span>
+          <button class="btn-ghost"><i class="ti ti-plus"></i> Add Awake Time</button>
+        </div>
+      </div>`;
+  }
+
+  function jobboardHTML(id, idx) {
+    return `
+      <div class="slot-head" onclick="toggleCollapse('${id}')">
+        <div class="slot-head-left">
+          <span class="slot-badge badge-jb" id="badge-${id}"><i class="ti ti-sparkles" style="font-size:10px;"></i> Job board</span>
+          <span class="slot-title" id="title-${id}">AI Auto Rostering</span>
+        </div>
+        <div class="slot-head-right" onclick="event.stopPropagation()">
+          <button class="icon-btn" onclick="toggleCollapse('${id}')"><i class="ti ti-chevron-up chevron"></i></button>
+          <button class="icon-btn remove" onclick="removeSlot('${id}')"><i class="ti ti-x"></i></button>
+        </div>
+      </div>
+      <div class="slot-body">
+        <div class="assignment-section" style="margin-bottom:10px;">
+          <div class="assignment-row" style="border-top:none; padding-top:0;">
+            <span class="micro-label">Shift assignment</span>
+            <div class="radio-pills">
+              <div class="radio-pill active" id="pill-auto-${id}" onclick="setJbMode('${id}','auto')">
+                <i class="ti ti-sparkles" style="font-size:11px;"></i> Auto-approve
+              </div>
+              <div class="radio-pill" id="pill-manual-${id}" onclick="setJbMode('${id}','manual')">
+                <i class="ti ti-user-check" style="font-size:11px;"></i> Require approval
+              </div>
+            </div>
+          </div>
+          <div class="hint ai" id="hint-${id}">
+            <i class="ti ti-info-circle"></i>
+            <span>AI auto rostering is active — carers are matched and assigned automatically.</span>
+          </div>
+        </div>
+
+        <div class="field-grid-3">
+          <div class="fl"><div class="fl-label">Start time</div><input type="time" value="09:00" /></div>
+          <div class="fl"><div class="fl-label">End time</div><input type="time" value="11:00" /></div>
+          <div class="fl"><div class="fl-label">Pay rate</div><select><option>Use staff member's default p...</option></select></div>
+        </div>
+        <div class="field-grid-3">
+          <div class="fl"><div class="fl-label">Travel mileage <i class="ti ti-info-circle" style="font-size:10px;"></i></div><select><option>Travel mileage</option></select></div>
+          <div class="fl"><div class="fl-label">Vehicle used <i class="ti ti-info-circle" style="font-size:10px;"></i></div><select><option>Not set</option></select></div>
+          <div class="fl"><div class="fl-label">Entry method <i class="ti ti-info-circle" style="font-size:10px;"></i></div><select><option>GPS only</option></select></div>
+        </div>
+        <div class="inline-row">
+          <span class="inline-label">Break Time</span>
+          <button class="btn-ghost"><i class="ti ti-plus"></i> Add Break Time</button>
+        </div>
+        <div class="inline-row">
+          <span class="inline-label">Awake Time Tracking</span>
+          <button class="btn-ghost"><i class="ti ti-plus"></i> Add Awake Time</button>
+        </div>
+        <div class="inline-row">
+          <div>
+            <div class="inline-label">Applicant Waitlist</div>
+            <div class="inline-sub">Allow carers to join the waitlist from the job board when this slot is filled.</div>
+          </div>
+          <div class="jb-toggle" onclick="toggleJbToggle(this)"></div>
+        </div>
+
+        <div class="criteria-card" id="criteria-${id}">
+          <div class="criteria-head" onclick="toggleCriteria('${id}')">
+            Job Board criteria
+            <i class="ti ti-chevron-up crit-chev" style="font-size:13px; color:var(--text-tertiary); transition:transform 0.2s;"></i>
+          </div>
+          <div class="criteria-body">
+            <div>
+              <div class="criteria-section-label">Teams</div>
+              <div class="pill-grid" id="teams-${id}">
+                <div class="pill sel" onclick="selectPill(this,'teams-${id}')">No restriction set</div>
+                <div class="pill" onclick="selectPill(this,'teams-${id}')">Select Team</div>
+              </div>
+            </div>
+            <div>
+              <div class="criteria-section-label">Carer qualification matching</div>
+              <div class="pill-grid" id="qual-${id}">
+                <div class="pill sel" onclick="selectPill(this,'qual-${id}')">No restriction set</div>
+                <div class="pill" onclick="selectPill(this,'qual-${id}')">Allow partially qualified carers</div>
+                <div class="pill" onclick="selectPill(this,'qual-${id}')">Strict qualification matching</div>
+              </div>
+            </div>
+            <div>
+              <div class="criteria-section-label">Distance from shift location</div>
+              <div class="pill-grid" id="dist-${id}">
+                <div class="pill sel" onclick="selectPill(this,'dist-${id}')">Any distance</div>
+                <div class="pill" onclick="selectPill(this,'dist-${id}')">10–20km</div>
+                <div class="pill" onclick="selectPill(this,'dist-${id}')">21–30km</div>
+                <div class="pill" onclick="selectPill(this,'dist-${id}')">31–40km</div>
+                <div class="pill" onclick="selectPill(this,'dist-${id}')">41–50km</div>
+                <div class="pill" onclick="selectPill(this,'dist-${id}')">51–60km</div>
+                <div class="pill" onclick="selectPill(this,'dist-${id}')">61–70km</div>
+                <div class="pill" onclick="selectPill(this,'dist-${id}')">71–80km</div>
+                <div class="pill" onclick="selectPill(this,'dist-${id}')">81–90km</div>
+                <div class="pill" onclick="selectPill(this,'dist-${id}')">91–100km</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // Boot with 1 job board slot to match the original screenshot
+  addSlot('jobboard');
+</script>
+</body>
+</html>
